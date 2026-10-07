@@ -1,7 +1,8 @@
 # Streamlit Dashboard Patterns
 
-Reusable, tested code patterns for building Streamlit dashboards that
-mirror Power BI report visuals.
+Reusable, tested code patterns for Streamlit dashboards (the default for a
+Peliqan data app). Several mirror common BI-tool visuals; the examples name
+the Power BI equivalent.
 
 ## Multi-select filters with a clear-all button
 

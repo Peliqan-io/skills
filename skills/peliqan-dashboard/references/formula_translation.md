@@ -1,7 +1,10 @@
-# DAX-to-SQL Comparison Checklist
+# Formula Translation Checklist
 
 A checklist of specific mistakes that are easy to make when translating a
-Power BI DAX measure into SQL. Each item below describes a *pattern* of
+measure from a source report into SQL: a Power BI DAX measure, a Tableau
+calculated field, a Looker measure, a Qlik expression or an Excel formula.
+The examples use DAX because that's where most of these were found, but the
+traps are the same in every tool. Each item below describes a *pattern* of
 mistake worth checking for — treat these as things to verify on whatever
 fields and formulas the current project actually has, not as a fixed list of
 field names to look for. The specific column names, category codes, or

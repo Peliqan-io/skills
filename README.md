@@ -24,7 +24,7 @@ Peliqan Skills teach Claude how to work on your [Peliqan](https://peliqan.io) ac
 | Product | What you get | Docs |
 |---|---|---|
 | **Syncs** | Keep two systems in sync (orders, stock, customers…), API to API or to and from your warehouse. One worker per system pair, no duplicates, nothing lost silently, code you own. | [docs/syncs](docs/syncs/README.md) |
-| **Dashboards** | Dashboards on a Bronze/Silver/Gold architecture in your warehouse. Rebuild a Power BI report with its own DAX as the ground truth, or start from scratch. Every number is verified on real records before anything is built. | [docs/dashboards](docs/dashboards/README.md) |
+| **Dashboards** | Dashboards on your warehouse: rebuild a report from any BI tool (Power BI, Tableau, Excel…), start from scratch, or build on tables you already have. The data model scales from one view to a full Bronze/Silver/Gold architecture, and every number is verified on real records before anything is built. | [docs/dashboards](docs/dashboards/README.md) |
 
 More products will be added the same way, each with its own build skill and docs.
 
@@ -33,7 +33,7 @@ More products will be added the same way, each with its own build skill and docs
 | Skill | Command | What it does |
 |---|---|---|
 | [`peliqan-sync`](skills/peliqan-sync) | `/peliqan-sync` | **Build** a sync worker for a system pair, or add a sync to an existing one. Tests, deploys and verifies it. |
-| [`peliqan-dashboard`](skills/peliqan-dashboard) | `/peliqan-dashboard` | **Build** a dashboard on medallion layers, from a Power BI report or from scratch. Verifies formulas against the DAX and real data, then builds and documents it. |
+| [`peliqan-dashboard`](skills/peliqan-dashboard) | `/peliqan-dashboard` | **Build** a dashboard: from an existing report in any BI tool, from scratch, or on existing tables. Sets up the data model, verifies every number on real data, then builds and documents it. |
 | [`peliqan-audit`](skills/peliqan-audit) | `/peliqan-audit` | **Audit** something that looks healthy, before go-live or after a change. Returns a pass/warn/fail scorecard and a ranked fix list. Read-only. |
 | [`peliqan-support`](skills/peliqan-support) | `/peliqan-support` | **Support** when something is broken anywhere in your account: a sync, a pipeline, a data app, an API endpoint, a stale table. Finds the root cause and proposes a fix. Changes nothing without your go-ahead. |
 | [`peliqan-help`](skills/peliqan-help) | `/peliqan-help` | Quick reference for all of the above. |
@@ -93,7 +93,7 @@ skills/
 ├── peliqan-help/            # quick reference
 ├── peliqan-audit/           # SKILL.md + references/<product>.md
 ├── peliqan-support/         # SKILL.md + references/<product>.md
-├── peliqan-dashboard/       # build skill for dashboards: medallion layers, DAX checks, Streamlit patterns
+├── peliqan-dashboard/       # build skill for dashboards: data model, formula checks, Streamlit patterns
 └── peliqan-sync/            # build skill for syncs: framework, template, system notes, tests
 ```
 

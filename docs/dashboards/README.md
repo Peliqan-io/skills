@@ -1,6 +1,6 @@
 # Dashboards
 
-Dashboards on a layered (medallion) data architecture in your Peliqan warehouse. Rebuild an existing Power BI report with its own DAX as the ground truth, or build a new one from scratch. Claude verifies every number on real records before it builds anything on top of it.
+Dashboards on your Peliqan warehouse, deployed as a data app. Rebuild a report from any BI tool, start from scratch, or build on tables you already have. Claude sets up the data model the dashboard needs and verifies every number on real records before it builds anything on top of it.
 
 | | |
 |---|---|
@@ -19,10 +19,17 @@ Dashboards on a layered (medallion) data architecture in your Peliqan warehouse.
 
 ## 1. What it is
 
-Your data moves through four layers in the warehouse, each with exactly one job. The dashboard is a Peliqan data app (for example Streamlit) that reads only from the last layer.
+A dashboard is a Peliqan data app (Streamlit by default) that reads from one place: a **consumer layer** in your warehouse. Behind that layer sits a data model that's as simple as the dashboard allows:
+
+| Situation | Data model |
+|---|---|
+| One clean source, a few simple KPIs, one consumer | **Light:** a single consumer view (`dm_<domain>`) on the source tables, holding the business rules. |
+| Several sources, real business rules, or several consumers (dashboard, API, exports) | **Full medallion:** Bronze → Silver → Gold → consumer layer, shown below. |
+
+If your warehouse already has a layered model, the dashboard follows its conventions. A light model grows into the full one when a second source or consumer arrives.
 
 <p align="center">
-  <img src="images/medallion-layers.svg" width="900" alt="Sources are loaded by connectors into Bronze (raw, append-only), cleaned per source in Silver, combined in Gold where all business rules live, and exposed as a passthrough in the dm_ consumer layer. The dashboard data app reads only from dm_. A wrong number is traced back one layer at a time.">
+  <img src="images/medallion-layers.svg" width="900" alt="The full model: sources are loaded by connectors into Bronze (raw, append-only), cleaned per source in Silver, combined in Gold where all business rules live, and exposed as a passthrough in the dm_ consumer layer. The dashboard data app reads only from dm_. A wrong number is traced back one layer at a time.">
 </p>
 
 | Layer | Job | Think of it as |
@@ -32,61 +39,58 @@ Your data moves through four layers in the warehouse, each with exactly one job.
 | **Gold** | Sources combined, and **every business rule lives here and only here**: what counts as revenue, how an amount is derived, how a status code becomes a label. | Cooked to the recipe |
 | **`dm_<domain>`** | A passthrough of Gold, shaped for its consumers (`fct_` / `dim_` tables). No new logic. | Plated |
 
-Every dashboard follows these principles:
+Every dashboard follows these principles, whichever model it uses:
 
 | Principle | What it means for you |
 |---|---|
-| **One place for every rule** | A formula exists once, in Gold. Change it there and every dashboard on top follows. |
-| **Parity before polish** | When rebuilding a report, the original DAX decides what's correct, even where it looks unconventional. |
-| **Verified, not assumed** | A query that runs isn't done. Each number is checked on a real record against the source report, and the checks are kept. |
-| **Same look, not just same numbers** | Visual types, colours and hierarchies are replicated, not swapped for "close enough". |
-| **Traceable** | A wrong number is found one layer at a time, at the one layer that introduced it. |
+| **One place for every rule** | A formula exists once. Change it there and every dashboard on top follows. |
+| **The dashboard reads the consumer layer only** | Display logic in the app, business logic in the warehouse, never mixed. |
+| **Verified, not assumed** | A query that runs isn't done. Each number is checked on a real record against the ground truth, and the checks are kept. |
+| **Parity before polish** | When replacing a report, its own formulas decide what's correct, even where they look unconventional. |
+| **Same look, not just same numbers** | When replacing a report, visual types, colours and hierarchies are replicated, not swapped for "close enough". |
 | **Two documents** | A technical reference for whoever maintains it, and a plain-language one for whoever signs off on the assumptions. |
 
 ---
 
 ## 2. When to use it
 
-| Good fit | Typical examples |
-|---|---|
-| Moving off Power BI (or a similar BI tool) | Rebuild a report page as a dashboard on your own warehouse, with matching numbers |
-| A new reporting domain | Set up Bronze/Silver/Gold/`dm_` for sales, finance or projects, with a dashboard on top |
-| Checking numbers | "Does our dashboard still match the Power BI report?" |
-| One source of truth for several consumers | The same `dm_` tables feeding a dashboard, an API endpoint and exports |
+| Starting point | Ground truth | Typical example |
+|---|---|---|
+| **Replace an existing report** | The report's own formulas, field bindings and rendered look | Move a Power BI, Tableau, Looker, Qlik or Excel report onto your Peliqan warehouse, with matching numbers |
+| **A new dashboard** | The business rules you confirm | A KPI dashboard for a new domain, with the reporting layers it needs |
+| **On tables you already have** | The existing tables, plus rules you confirm for anything new | A dashboard on top of an existing `dm_` layer, query table or sync output |
 
 When something else is the better choice:
 
-- **A quick one-off chart.** Query the table directly; you don't need four layers for it.
+- **A quick one-off chart or export.** Query the table directly.
 - **Writing data back to an app.** That's a [sync](../syncs/README.md), not a dashboard.
 
 ### Before / after
 
-You have a Power BI sales report and want it as a dashboard on your Peliqan warehouse.
+You have a sales report in a BI tool and want it as a dashboard on your Peliqan warehouse.
 
 **Without the skill:** someone rewrites the measures in SQL from memory of what they *should* be, the totals are 3% off, and nobody can say which of twenty formulas is responsible.
 
 **With the skill:**
 
-> Rebuild the "Sales overview" page of this PBIX as a dashboard.
+> Rebuild the "Sales overview" page of this report as a dashboard.
 
-Claude sets up the layers, catalogs every visual on that page, translates each DAX measure literally into Gold, checks it on one real record against the report, and only then builds the dashboard. Every check is kept in a `CHECK` schema, so "how do we know this is right?" always has an answer.
+Claude sets up the data model, catalogs every visual on that page, translates each formula literally, checks it on one real record against the report, and only then builds the dashboard. Every check is kept in a `CHECK` schema, so "how do we know this is right?" always has an answer.
 
 ---
 
 ## 3. How it works
 
 <p align="center">
-  <img src="images/build-flow.svg" width="900" alt="Build flow: 1 set up layers, 2 catalog every visual of the confirmed page, 3 translate DAX to SQL in Gold, 4 verify on one real record (kept in the CHECK schema), with a loop back to translate on a mismatch, then after your confirmation 5 build the dashboard on dm_ and 6 document it. Ground truth is the PBIX page, DAX measures and screenshots, or the business rules you confirm.">
+  <img src="images/build-flow.svg" width="900" alt="Build flow: 1 set up the data model the dashboard needs, 2 catalog every visual in the confirmed scope, 3 translate each formula literally into SQL in one place, 4 verify on one real record (kept in the CHECK schema), with a loop back to translate on a mismatch, then after your confirmation 5 build the dashboard on the consumer layer and 6 document it. Ground truth is the existing report's formulas, bindings and screenshots, or the rules you confirm.">
 </p>
 
-1. **Layers first.** Bronze → Silver → Gold → `dm_`, following the naming your warehouse already uses.
-2. **Catalog the page.** With a PBIX, you confirm which page to rebuild. Claude records every visual's type, fields and styling, and checks that the data behind it exists in the warehouse.
-3. **Translate literally.** Each DAX measure becomes SQL in Gold, including its sign conventions, filters and scopes, even when two related measures look inconsistent. That inconsistency may be intentional.
-4. **Verify on one real record.** Claude picks a record you can check in the report, hand-computes what the DAX produces, and compares it with the SQL output, field by field. A mismatch goes back to step 3. Checks are kept in a `CHECK` schema.
-5. **Build** the dashboard on the `dm_` layer, with the same visual types as the original. This happens only after you confirm the numbers are verified.
-6. **Document** in two versions: technical (SQL, field mappings, DAX comparisons) and plain language (no code).
-
-**No PBIX?** Then there's nothing to verify against. Claude asks you for the business rules, or proposes standard definitions and states them as assumptions for you to confirm. Steps 1, 5 and 6 work the same.
+1. **Data model first.** Claude inspects what's in your warehouse and sets up the light or full model, following the naming you already use.
+2. **Catalog the scope.** For a report you're replacing, you confirm which report or page. Claude records every visual's type, fields and styling, and checks that the data behind it exists. From scratch, Claude asks which KPIs and visuals you want and how each is defined.
+3. **Translate literally.** Each formula becomes SQL in the business-logic layer, with its sign conventions, filters and scopes intact, even when two related measures look inconsistent. That inconsistency may be intentional. From scratch, each definition is written down and confirmed by you first.
+4. **Verify on one real record.** Claude picks a record you can check, hand-computes the expected value and compares it with the SQL output, field by field. A mismatch goes back to step 3.
+5. **Build** the dashboard on the consumer layer. This happens only after you confirm the numbers are verified.
+6. **Document** in two versions: technical (SQL, field mappings, formula comparisons) and plain language (no code).
 
 After go-live, **freshness** and **load time** are checked as their own passes. A green pipeline doesn't guarantee every row is current, and a correct dashboard can still be slow.
 
@@ -96,43 +100,39 @@ After go-live, **freshness** and **load time** are checked as their own passes. 
 
 ### What you need
 
-- A Peliqan account with the **source data loaded** into the warehouse by connectors.
-- Optionally: the **PBIX file**, the **DAX measures** (pasted from Power BI's model view) and **screenshots** of the rendered page.
+- A Peliqan account with the **source data** in the warehouse (loaded by connectors, or written by a sync).
+- When replacing a report: the **report file** (e.g. a PBIX), its **formulas**, and **screenshots** of the rendered pages. Partial access helps too: a few pasted formulas are enough to verify the visuals that use them.
 - **Claude** with the Peliqan skills installed and the Peliqan MCP connected. See [Installation](../../README.md#installation).
 
 ### Build: `peliqan-dashboard`
 
 > Rebuild this Power BI report as a dashboard.
 
-> Set up bronze, silver and gold for our project data, with a dashboard on top.
+> Build a sales dashboard on our order tables.
 
-Claude previews the stages, then checks in at fixed points: which page, whether a formula's result is confirmed, and whether to move from verifying to building. It also asks before assuming a title or a logo.
+> Set up reporting layers for our project data, with a dashboard on top.
+
+Claude previews the stages, then checks in at fixed points: the scope, whether a number is confirmed, and when to move from verifying to building. It also asks before assuming a title or a logo.
 
 ### Audit: `peliqan-audit`
 
-> Check our sales dashboard before we switch off Power BI.
+> Check our sales dashboard before we switch off the old report.
 
-Claude checks the architecture, correctness and presentation:
-- **Architecture:** business rules only in Gold, `dm_` tables as pure passthroughs, and the dashboard reading `dm_` only.
-- **Correctness**, when a PBIX or DAX is available: the field bindings and the known DAX translation traps.
+Claude checks four things and gives you the same verdict, scorecard and fix list as for any audit:
+- **Data model:** whether it fits the need, has one place per rule, and whether the dashboard reads only the consumer layer.
+- **Correctness:** against the source report or the agreed rules.
 - **Presentation:** visual types, number formatting and column names.
 - **Health:** data freshness and load time.
 
-You get the same verdict, scorecard and fix list as for any audit.
-
 ### Support: `peliqan-support`
 
-> The dashboard numbers don't match Power BI anymore.
+> The dashboard numbers don't match the old report anymore.
 
-Claude first settles two questions:
-- Is it **dashboard-side or warehouse-side**?
-- Is the data **stale** (stopped updating) or **wrong** (current but different)?
-
-It then follows lineage down the layers, or isolates one record, to find the layer where the value first diverges. If the cause is stale data, it stops at the diagnosis and never triggers a resync itself.
+Claude first works out whether the problem is **dashboard-side or warehouse-side**, and whether the data is **stale** (stopped updating) or **wrong** (current but different). It then follows lineage down the layers, or isolates one record, to find the layer where the value first diverges. If the cause is stale data, it stops at the diagnosis and never triggers a resync itself.
 
 ### Safety rules built into the skills
 
-- **The original report is the ground truth.** Claude doesn't "fix" a DAX measure that looks unconventional; it asks.
-- **Business rules never go into the dashboard or the `dm_` layer**, not even as a quick fix.
+- **The ground truth wins.** Claude doesn't "fix" a source formula that looks unconventional; it asks.
+- **Business rules never go into the dashboard script**, not even as a quick fix.
 - **Verification queries aren't deleted** without your confirmation.
 - **No resyncs, no publishing to other tools.** Documentation is handed to you as files; pushing it to Notion or elsewhere is a separate request.

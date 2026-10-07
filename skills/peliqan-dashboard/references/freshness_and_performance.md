@@ -1,7 +1,7 @@
 # Data Freshness Diagnosis & Load-Time Hygiene
 
 These two concerns are separate from correctness (covered in
-`dax_comparison.md` and the main SKILL.md steps 3–4) and separate from each
+`formula_translation.md` and the main SKILL.md steps 3–4) and separate from each
 other — a dashboard can have either problem, both, or neither, independent
 of whether its formulas are right.
 

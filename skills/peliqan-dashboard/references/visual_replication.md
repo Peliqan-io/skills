@@ -1,9 +1,11 @@
-# Replicating PBIX Visuals: Type and Styling, Not Just Data
+# Replicating a Source Report's Visuals: Type and Styling, Not Just Data
 
-Matching a Power BI report's numbers is only half the job — replicating
+When a dashboard replaces an existing report (Power BI, Tableau, Looker,
+Qlik, Excel…), matching its numbers is only half the job — replicating
 "look and feel" is part of parity too. This file covers how to catalog and
 replicate each visual's *type* and *styling*, independent of whatever data
-verification (see `dax_comparison.md`) confirms about its formulas.
+verification (see `formula_translation.md`) confirms about its formulas.
+Examples use Power BI terms; map them to the source tool's equivalents.
 
 ## Catalog every visual before writing any dashboard code
 

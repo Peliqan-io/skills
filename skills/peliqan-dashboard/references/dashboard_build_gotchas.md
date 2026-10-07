@@ -125,7 +125,7 @@ by changing styles.
 ## Verify what's actually displayed, not just what's filtered
 
 When a dashboard filter must show a literal source field (per the binding
-rule in `dax_comparison.md`), verify what you're actually displaying, not
+rule in `formula_translation.md`), verify what you're actually displaying, not
 just what column you're technically filtering on. It's possible to
 correctly filter on the right column while still visually leaking the
 wrong one — e.g. building a dropdown label like `f"{code} — {name}"` still

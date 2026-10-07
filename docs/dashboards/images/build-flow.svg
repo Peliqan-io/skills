@@ -13,16 +13,16 @@
   <!-- Ground truth input -->
   <text x="344" y="40" fill="#2F3B4C" font-size="12px" font-weight="bold">GROUND TRUTH</text>
   <rect x="344" y="50" width="302" height="40" rx="6" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/>
-  <text x="495" y="68" fill="#333" font-size="11px" font-weight="bold" text-anchor="middle">PBIX page · DAX measures · screenshots</text>
-  <text x="495" y="82" fill="#666" font-size="9px" text-anchor="middle">or, from scratch: the business rules you confirm</text>
+  <text x="495" y="68" fill="#333" font-size="11px" font-weight="bold" text-anchor="middle">Existing report: formulas · bindings · screenshots</text>
+  <text x="495" y="82" fill="#666" font-size="9px" text-anchor="middle">Power BI, Tableau, Excel… or, from scratch: the rules you confirm</text>
   <path d="M414,90 V132" stroke="#5B6B80" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
   <path d="M576,90 V132" stroke="#5B6B80" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
 
   <!-- Steps -->
   <rect x="20" y="136" width="140" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
-  <text x="90" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">1 Layers</text>
-  <text x="90" y="180" fill="#666" font-size="10px" text-anchor="middle">Bronze → Silver →</text>
-  <text x="90" y="194" fill="#666" font-size="10px" text-anchor="middle">Gold → dm_</text>
+  <text x="90" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">1 Data model</text>
+  <text x="90" y="180" fill="#666" font-size="10px" text-anchor="middle">light or full,</text>
+  <text x="90" y="194" fill="#666" font-size="10px" text-anchor="middle">as the need requires</text>
 
   <rect x="182" y="136" width="140" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
   <text x="252" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">2 Catalog</text>
@@ -31,8 +31,8 @@
 
   <rect x="344" y="136" width="140" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
   <text x="414" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">3 Translate</text>
-  <text x="414" y="180" fill="#666" font-size="10px" text-anchor="middle">DAX → SQL in Gold,</text>
-  <text x="414" y="194" fill="#666" font-size="10px" text-anchor="middle">literally, quirks too</text>
+  <text x="414" y="180" fill="#666" font-size="10px" text-anchor="middle">formula → SQL,</text>
+  <text x="414" y="194" fill="#666" font-size="10px" text-anchor="middle">literally, in one place</text>
 
   <rect x="506" y="136" width="140" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="2.5"/>
   <text x="576" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">4 Verify</text>
@@ -42,8 +42,8 @@
 
   <rect x="668" y="136" width="140" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
   <text x="738" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">5 Build</text>
-  <text x="738" y="180" fill="#666" font-size="10px" text-anchor="middle">dashboard on dm_,</text>
-  <text x="738" y="194" fill="#666" font-size="10px" text-anchor="middle">same visuals</text>
+  <text x="738" y="180" fill="#666" font-size="10px" text-anchor="middle">on the consumer layer,</text>
+  <text x="738" y="194" fill="#666" font-size="10px" text-anchor="middle">agreed visuals</text>
 
   <rect x="830" y="136" width="150" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
   <text x="905" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">6 Document</text>
@@ -58,7 +58,7 @@
 
   <!-- Checkpoints -->
   <rect x="96" y="98" width="150" height="22" rx="11" fill="#FFFFFF" stroke="#E07B39" stroke-width="1.2"/>
-  <text x="171" y="113" fill="#D0652A" font-size="9px" text-anchor="middle">you confirm the page</text>
+  <text x="171" y="113" fill="#D0652A" font-size="9px" text-anchor="middle">you confirm the scope</text>
   <path d="M171,120 V178" stroke="#E07B39" stroke-width="1.2" stroke-dasharray="3 3"/>
   <rect x="660" y="98" width="130" height="22" rx="11" fill="#FFFFFF" stroke="#E07B39" stroke-width="1.2"/>
   <text x="725" y="113" fill="#D0652A" font-size="9px" text-anchor="middle">you confirm: verified</text>
