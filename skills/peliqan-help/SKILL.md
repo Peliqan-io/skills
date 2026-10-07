@@ -17,7 +17,7 @@ Show the overview below as-is. It needs no tool calls and no account access.
 | **peliqan-support** | `/peliqan-support` | **Support.** Something is broken anywhere in your account (a sync, pipeline, data app, endpoint, table): finds the root cause from the logs and data and proposes a fix. | Only after your explicit go-ahead |
 | **peliqan-help** | `/peliqan-help` | This card. | No |
 
-Installed as the Claude Code plugin, the commands carry the plugin name:
+Installed as the plugin (the recommended way), the commands carry the plugin name:
 `/peliqan:peliqan-sync`, `/peliqan:peliqan-support`, and so on.
 
 You don't have to call a skill by name. Describe what you want and Claude picks

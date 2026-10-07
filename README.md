@@ -61,9 +61,15 @@ Every framework follows the same lifecycle. Each framework has its own build ski
 
 ## Installation
 
-### Claude Code (recommended)
+### Claude app: add the marketplace (recommended)
 
-One install gives you all skills plus the Peliqan MCP server:
+1. Go to **Settings → Plugins** and choose **Add marketplace**.
+2. Enter `https://github.com/Peliqan-io/skills`.
+3. Install the **peliqan** plugin from that marketplace.
+
+One plugin gives you every skill plus the Peliqan MCP server. The first time a skill uses the Peliqan MCP, you sign in with your own Peliqan account. Updates arrive through the same marketplace.
+
+### Claude Code: the same marketplace from the terminal
 
 ```
 /plugin marketplace add Peliqan-io/skills
@@ -73,22 +79,20 @@ One install gives you all skills plus the Peliqan MCP server:
 /plugin install peliqan@peliqan
 ```
 
-Send these as two separate prompts. The skills are then available as `/peliqan:peliqan-sync`, `/peliqan:peliqan-dashboard`, `/peliqan:peliqan-audit`, `/peliqan:peliqan-support` and `/peliqan:peliqan-help`. The first time a skill uses the Peliqan MCP, you sign in with your own Peliqan account.
+Send these as two separate prompts. The skills are then available as `/peliqan:peliqan-sync`, `/peliqan:peliqan-dashboard`, `/peliqan:peliqan-audit`, `/peliqan:peliqan-support` and `/peliqan:peliqan-help`.
 
-### Claude Code (manual)
+### Without the plugin
 
-```bash
-git clone https://github.com/Peliqan-io/skills.git peliqan-skills
-mkdir -p ~/.claude/skills
-cp -R peliqan-skills/skills/* ~/.claude/skills/
-claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp
-```
+Only if plugins aren't available to you. Install every skill: audit and support read the rules inside the build skills.
 
-### claude.ai / Claude Desktop
-
-1. Download this repository and zip each folder under `skills/` separately (each zip must contain its skill folder).
-2. Go to **Settings → Capabilities → Skills** and upload the zips. Upload all of them: audit and support read the rules inside the build skills.
-3. Add the Peliqan MCP server as a custom connector: `https://mcp.eu.peliqan.io/mcp`.
+- **Claude Code:**
+  ```bash
+  git clone https://github.com/Peliqan-io/skills.git peliqan-skills
+  mkdir -p ~/.claude/skills
+  cp -R peliqan-skills/skills/* ~/.claude/skills/
+  claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp
+  ```
+- **Claude app:** zip each folder under `skills/` separately (each zip must contain its skill folder), upload them under **Settings → Capabilities → Skills**, and add `https://mcp.eu.peliqan.io/mcp` as a custom connector.
 
 ## Repository layout
 
