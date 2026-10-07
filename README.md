@@ -45,6 +45,8 @@ One install gives you all four. You don't have to remember the commands either: 
 
 More skills will be added here over time.
 
+Want the full picture: architecture, guards and QA? Read the [technical overview](docs/technical-overview.md).
+
 **On this page**
 
 1. [What the skill builds](#1-what-the-skill-builds)
@@ -271,6 +273,7 @@ claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp
 ```
 .claude-plugin/                      # plugin manifest: one install for everything
 .mcp.json                            # bundles the Peliqan MCP server
+docs/technical-overview.md           # architecture, risks and guards, QA
 skills/
 ├── peliqan-help/SKILL.md            # quick reference
 ├── peliqan-sync-audit/SKILL.md      # audit: scorecard against the framework rules
