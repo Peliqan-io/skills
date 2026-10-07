@@ -37,15 +37,16 @@ Diagrams are hand-written SVG, not Mermaid, so they look the same everywhere.
 
 | Element | Style |
 |---|---|
-| Runs in Peliqan (data app, worker step, skill) | fill `#FDEEE2`, stroke `#E07B39` |
-| Configuration | fill `#E9EEF4`, stroke `#5B6B80` |
-| Data in the warehouse | fill `#FFFFFF`, stroke `#333` |
+| Runs in Peliqan (data app, worker step, skill) | fill `#FCEFE3`, stroke `#ED7D2B` (Peliqan orange) |
+| Configuration | fill `#E9EEF4`, stroke `#34516E` |
+| Data in the warehouse | fill `#FFFFFF`, stroke `#383838` |
 | External system | fill `#EEF0F3`, stroke `#C5CAD1` |
 | Optional or a rule | fill `#FAFAFA`, dashed stroke `#BDBDBD` |
-| Error or write-back path | stroke `#E07B39`; dashed for retries |
+| Error or write-back path | stroke `#ED7D2B`; dashed for a replay path |
 | Background | white card, `rx="10"`, stroke `#E3E3E3`, so it reads in dark mode too |
 
 - Always end with a legend row.
 - Use inline attributes, not a `<style>` block: some renderers ignore CSS in SVG.
-- Font: `DejaVu Sans, Verdana, Segoe UI, Helvetica, Arial, sans-serif`. Titles 12–14px bold, labels 10px.
+- Text: `#383838`, secondary `#6B6B6B`, orange text `#C8631A`.
+- Font: `Roboto, Helvetica, Arial, sans-serif`. Titles 12–14px bold, labels 10px.
 - Put an `alt` text on every `<img>` that describes what the diagram shows.

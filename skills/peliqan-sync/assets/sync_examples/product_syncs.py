@@ -1,15 +1,19 @@
 # ============================================================
-# SYNC EXAMPLES — the three product syncs, adapted to framework v4
+# SYNC EXAMPLES: the three product syncs, on framework v6
 # ============================================================
 # Reference trios the sync-builder copies. Transport helpers live in the
 # worker template; these add only sync-SPECIFIC constants/helpers.
-# v2 conventions shown here:
+# Conventions shown here:
 #   - hash via stable_hash({owned fields}), NOT ad-hoc str concatenation
+#   - read with a >= drain (shopify_drain / odoo_search_read_incremental)
+#   - prefetch_links per page (Odoo) or per drained list (Shopify), for this
+#     sync AND the parent syncs it resolves
+#   - note_skip() instead of a log line per skipped record
 #   - process_<sync> RETURNS {"processed","errors","skipped"} for the run log
 #   - registered in SYNC_REGISTRY with an optional "replay" handler
 #
-# The three examples are a PATTERN, not a menu — see sync-build.md for the
-# full mechanism list (fan-out, branching, derived values, reconciliation…).
+# The three examples are a PATTERN, not a menu: see sync-build.md for the
+# full mechanism list (fan-out, branching, derived values, reconciliation...).
 #
 # Constants (declared near the other SYNC_* names):
 #   SYNC_TEMPLATES   = "shopify_products_to_odoo_product_templates"
@@ -19,7 +23,16 @@
 
 # ============================================================
 # SYNC 1: shopify products -> odoo product templates (content)
+# Ownership: Shopify owns title, description and status.
 # ============================================================
+CHANGED_PRODUCTS_QUERY = (
+    "query changedProducts($first: Int!, $cursor: String, $q: String) { "
+    "products(first: $first, after: $cursor, query: $q) { "
+    "edges { node { id title descriptionHtml status updatedAt } } "
+    "pageInfo { hasNextPage endCursor } } }"
+)
+
+
 def fieldmapping_shopify_product_to_odoo_product_template(p):
     odoo_record = {
         "name": p.get("title") or "(no title)",
@@ -35,10 +48,9 @@ def fieldmapping_shopify_product_to_odoo_product_template(p):
 def process_shopify_product_to_odoo_product_template(sync_name, p):
     """Single-record 6 steps. Returns 'ok' | 'skip' | 'error' for counting."""
     source_id = gid_to_numeric(p.get("id"))
-    st.subheader(f"[templates] {source_id} - {p.get('title')}")
 
     if not source_id or not p.get("title"):
-        st.error("source_error: id or title missing")
+        st.error(f"[templates] {source_id}: source_error: id or title missing")
         insert_link_row(sync_name, "insert", "source_error", shopify_id=source_id, shopify_source_json=p,
                         error_detail="source validation failed: id or title missing")
         return "error"
@@ -46,9 +58,10 @@ def process_shopify_product_to_odoo_product_template(sync_name, p):
     target_id, last_hash = find_target(sync_name, source_id)
     odoo_record, new_hash = fieldmapping_shopify_product_to_odoo_product_template(p)
     if target_id and last_hash == new_hash:
-        st.text("no change in hash -> skip")
+        note_skip(sync_name)
         return "skip"
 
+    st.subheader(f"[templates] {source_id} - {p.get('title')}")
     action = "update" if target_id else "insert"
     try:
         result = odoo_object_update("product.template", target_id, odoo_record) if target_id \
@@ -75,9 +88,11 @@ def process_shopify_products_to_odoo_product_templates():
     bookmark = get_bookmark(sync_name) or "2020-01-01T00:00:00Z"
     st.write(f"Sync: {sync_name} | bookmark: {bookmark}")
 
-    products = sort_by_updated_at(shopify_list_incremental("products", bookmark_with_overlap(bookmark)))  # v4: overlap on connector-list paths (contract §6)
+    products = sort_by_updated_at(shopify_drain(CHANGED_PRODUCTS_QUERY, "products", bookmark))
     st.write(f"Source records: {len(products)} (max {TEST_LIMIT if TEST_LIMIT else 'all'})")
 
+    # ponytail: prefetches the whole drained list; slice it if TEST_LIMIT runs on huge catalogues get slow
+    prefetch_links(sync_name, "shopify", [gid_to_numeric(p.get("id")) for p in products])
     c = {"processed": 0, "errors": 0, "skipped": 0}
     high_water = bookmark
     for p in products:
@@ -107,33 +122,15 @@ def process_shopify_products_to_odoo_product_templates():
 # ============================================================
 # SYNC 2: shopify variants -> odoo product.product (ops SEED once)
 # Parent dependency + orphan-freeze. Bookmark on variant updatedAt.
+# Ownership: sku/barcode/weight are seeded once from Shopify, then Odoo-owned.
 # ============================================================
 CHANGED_VARIANTS_QUERY = (
-    "query getChangedVariants($cursor: String, $q: String) { "
-    "productVariants(first: 100, after: $cursor, query: $q) { "
+    "query changedVariants($first: Int!, $cursor: String, $q: String) { "
+    "productVariants(first: $first, after: $cursor, query: $q) { "
     "edges { node { id title updatedAt sku barcode product { id } "
     "inventoryItem { measurement { weight { value unit } } } } } "
     "pageInfo { hasNextPage endCursor } } }"
 )
-
-
-def fetch_changed_shopify_variants(bookmark):
-    variants, cursor = [], None
-    query_filter = f"updated_at:>='{bookmark}'"  # v4: >= not > (equal-second boundary; contract §6)
-    for _ in range(200):  # 200 pages * 100 = 20000 variants safety cap
-        result = shopify_graphql(CHANGED_VARIANTS_QUERY, {"cursor": cursor, "q": query_filter})
-        if not is_ok(result):
-            st.warning("GraphQL productVariants query not ok")
-            break
-        block = (result.get("detail", {}).get("data", {}) or {}).get("productVariants") or {}
-        variants.extend(e["node"] for e in (block.get("edges") or []) if e.get("node"))
-        page_info = block.get("pageInfo", {}) or {}
-        if not page_info.get("hasNextPage"):
-            break
-        cursor = page_info.get("endCursor")
-        if not cursor:
-            break
-    return variants
 
 
 def weight_to_kg(value, unit):
@@ -161,7 +158,6 @@ def fieldmapping_shopify_variant_to_odoo_product_product(v):
 
 def process_shopify_variant_to_odoo_product_product(sync_name, v, parent_odoo_id):
     source_id = gid_to_numeric(v.get("id"))
-    st.subheader(f"[variants] {source_id} - {v.get('title')}")
     if not source_id:
         insert_link_row(sync_name, "insert", "source_error", shopify_source_json=v,
                         error_detail="source validation failed: variant id missing")
@@ -169,9 +165,10 @@ def process_shopify_variant_to_odoo_product_product(sync_name, v, parent_odoo_id
 
     target_id, _ = find_target(sync_name, source_id)
     if target_id:
-        st.text("already linked; ops fields Odoo-owned -> skip")
+        note_skip(sync_name, "already linked; ops fields Odoo-owned -> skip")
         return "skip"
 
+    st.subheader(f"[variants] {source_id} - {v.get('title')}")
     try:
         variants = odoo_object_search("product.product", [["product_tmpl_id", "=", int(parent_odoo_id)]],
                                       ["id", "default_code", "barcode", "weight"])
@@ -226,9 +223,11 @@ def process_shopify_variants_to_odoo_product_products():
     bookmark = get_bookmark(sync_name) or "2020-01-01T00:00:00Z"
     st.write(f"Sync: {sync_name} | bookmark: {bookmark}")
 
-    variants = sort_by_updated_at(fetch_changed_shopify_variants(bookmark))
+    variants = sort_by_updated_at(shopify_drain(CHANGED_VARIANTS_QUERY, "productVariants", bookmark))
     st.write(f"Changed variants: {len(variants)} (max {TEST_LIMIT if TEST_LIMIT else 'all'})")
 
+    prefetch_links(sync_name, "shopify", [gid_to_numeric(v.get("id")) for v in variants])
+    prefetch_links(SYNC_TEMPLATES, "shopify", [gid_to_numeric((v.get("product") or {}).get("id")) for v in variants])
     c = {"processed": 0, "errors": 0, "skipped": 0}
     high_water, frozen, orphans = bookmark, False, 0
     for v in variants:
@@ -265,6 +264,7 @@ def process_shopify_variants_to_odoo_product_products():
 # ============================================================
 # SYNC 3: odoo product.product -> shopify variants (ops fields)
 # write_date drain; SEPARATE Odoo-format bookmark.
+# Ownership: Odoo owns default_code/barcode/weight once seeded.
 # ============================================================
 VARIANT_UPDATE_MUTATION = (
     "mutation updateVariant($productId: ID!, $variants: [ProductVariantsBulkInput!]!) { "
@@ -291,15 +291,15 @@ def fieldmapping_odoo_product_product_to_shopify_variant(odoo_variant, shopify_v
 
 def process_odoo_product_product_to_shopify_variant(sync_name, odoo_variant, shopify_variant_id, parent_shopify_id):
     odoo_id = odoo_variant.get("id")
-    st.subheader(f"[variant ops] odoo {odoo_id} -> shopify {shopify_variant_id}")
 
     _, last_hash = find_link_by_odoo(sync_name, odoo_id)
     variant_gid = f"gid://shopify/ProductVariant/{shopify_variant_id}"
     variant_input, new_hash = fieldmapping_odoo_product_product_to_shopify_variant(odoo_variant, variant_gid)
     if last_hash == new_hash:
-        st.text("no change in hash -> skip")
+        note_skip(sync_name)
         return "skip"
 
+    st.subheader(f"[variant ops] odoo {odoo_id} -> shopify {shopify_variant_id}")
     if len(variant_input) == 1:
         insert_link_row(sync_name, "update", "ok", shopify_id=shopify_variant_id, odoo_id=odoo_id,
                         odoo_source_hash=new_hash, odoo_source_json=odoo_variant)
@@ -325,6 +325,11 @@ def process_odoo_product_product_to_shopify_variant(sync_name, odoo_variant, sho
     return "ok"
 
 
+def _tmpl_id(odoo_variant):
+    tmpl = odoo_variant.get("product_tmpl_id")
+    return tmpl[0] if isinstance(tmpl, (list, tuple)) else tmpl
+
+
 def process_odoo_product_products_to_shopify_variants():
     sync_name = SYNC_VARIANT_OPS
     bookmark = get_bookmark(sync_name) or "2020-01-01 00:00:00"   # Odoo write_date format
@@ -335,6 +340,10 @@ def process_odoo_product_products_to_shopify_variants():
     high_water, limit_hit = bookmark, False
 
     for rows in odoo_search_read_incremental("product.product", fields, bookmark):
+        ids = [r.get("id") for r in rows]
+        prefetch_links(sync_name, "odoo", ids)
+        prefetch_links(SYNC_VARIANTS, "odoo", ids)
+        prefetch_links(SYNC_TEMPLATES, "odoo", [_tmpl_id(r) for r in rows])
         for odoo_variant in rows:
             if _limit_reached(c["processed"]):
                 st.info("TEST_LIMIT reached"); limit_hit = True; break
@@ -342,9 +351,7 @@ def process_odoo_product_products_to_shopify_variants():
             shopify_variant_id, _ = find_link_by_odoo(SYNC_VARIANTS, odoo_id)
             if not shopify_variant_id:
                 high_water = advance_bookmark(high_water, odoo_variant.get("write_date")); continue
-            tmpl = odoo_variant.get("product_tmpl_id")
-            tmpl_id = tmpl[0] if isinstance(tmpl, (list, tuple)) else tmpl
-            parent_shopify_id, _ = find_link_by_odoo(SYNC_TEMPLATES, tmpl_id)
+            parent_shopify_id, _ = find_link_by_odoo(SYNC_TEMPLATES, _tmpl_id(odoo_variant))
             if not parent_shopify_id:
                 high_water = advance_bookmark(high_water, odoo_variant.get("write_date")); continue
             try:

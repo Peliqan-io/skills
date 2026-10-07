@@ -1,3 +1,12 @@
+<p align="center">
+  <a href="https://peliqan.io">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/images/peliqan-logo-dark.png">
+      <img src="docs/images/peliqan-logo.png" width="260" alt="Peliqan">
+    </picture>
+  </a>
+</p>
+
 <h1 align="center">Peliqan Skills</h1>
 
 <p align="center">
@@ -5,9 +14,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/works%20with-Claude%20Code%20%7C%20claude.ai-111111?style=flat-square" alt="Works with Claude Code and claude.ai">
-  <img src="https://img.shields.io/badge/skills-5-111111?style=flat-square" alt="5 skills">
-  <img src="https://img.shields.io/badge/MCP-Peliqan-111111?style=flat-square" alt="Peliqan MCP">
+  <a href="https://peliqan.io"><img src="https://img.shields.io/badge/Peliqan-data%20platform-ED7D2B?style=flat&labelColor=383838" alt="Peliqan data platform"></a>
+  <img src="https://img.shields.io/badge/Claude-Code%20%7C%20claude.ai-ED7D2B?style=flat&labelColor=383838" alt="Works with Claude Code and claude.ai">
+  <img src="https://img.shields.io/badge/MCP-mcp.eu.peliqan.io-ED7D2B?style=flat&labelColor=383838" alt="Peliqan MCP server">
 </p>
 
 <p align="center">
@@ -25,7 +34,7 @@ Proven patterns for what you build on Peliqan. Claude builds, audits and support
 
 | Framework | What you get | Docs |
 |---|---|---|
-| **Syncs** | Keep two systems in sync (orders, stock, customers…), API to API or to and from your warehouse. One worker per system pair, no duplicates, nothing lost silently, code you own. | [docs/syncs](docs/syncs/README.md) |
+| **Syncs** | Keep two systems in sync (orders, stock, customers…), API to API, or reading from your warehouse. One worker per system pair, no duplicates, nothing lost silently, code you own. | [docs/syncs](docs/syncs/README.md) |
 | **Dashboards** | Dashboards on your warehouse: rebuild a report from any BI tool (Power BI, Tableau, Excel…), start from scratch, or build on tables you already have. The data model scales from one view to a full Bronze/Silver/Gold architecture, and every number is verified on real records before anything is built. | [docs/dashboards](docs/dashboards/README.md) |
 
 More frameworks will be added the same way, each with its own build skill and docs.
@@ -34,13 +43,13 @@ More frameworks will be added the same way, each with its own build skill and do
 
 | Skill | Command | What it does |
 |---|---|---|
-| [`peliqan-sync`](skills/peliqan-sync) | `/peliqan-sync` | **Build** a sync worker for a system pair, or add a sync to an existing one. Tests, deploys and verifies it. |
-| [`peliqan-dashboard`](skills/peliqan-dashboard) | `/peliqan-dashboard` | **Build** a dashboard: from an existing report in any BI tool, from scratch, or on existing tables. Sets up the data model, verifies every number on real data, then builds and documents it. |
-| [`peliqan-audit`](skills/peliqan-audit) | `/peliqan-audit` | **Audit** something that looks healthy, before go-live or after a change. Returns a pass/warn/fail scorecard and a ranked fix list. Read-only. |
-| [`peliqan-support`](skills/peliqan-support) | `/peliqan-support` | **Support** when something is broken anywhere in your account: a sync, a pipeline, a data app, an API endpoint, a stale table. Finds the root cause and proposes a fix. Changes nothing without your go-ahead. |
-| [`peliqan-help`](skills/peliqan-help) | `/peliqan-help` | Quick reference for all of the above. |
+| [`peliqan-sync`](skills/peliqan-sync) | `/peliqan:peliqan-sync` | **Build** a sync worker for a system pair, or add a sync to an existing one. Tests, deploys and verifies it. |
+| [`peliqan-dashboard`](skills/peliqan-dashboard) | `/peliqan:peliqan-dashboard` | **Build** a dashboard: from an existing report in any BI tool, from scratch, or on existing tables. Sets up the data model, verifies every number on real data, then builds and documents it. |
+| [`peliqan-audit`](skills/peliqan-audit) | `/peliqan:peliqan-audit` | **Audit** something that looks healthy, before go-live or after a change. Returns a pass/warn/fail scorecard and a ranked fix list. Read-only. |
+| [`peliqan-support`](skills/peliqan-support) | `/peliqan:peliqan-support` | **Support** when something is broken anywhere in your account: a sync, a pipeline, a data app, an API endpoint, a stale table. Finds the root cause and proposes a fix. Changes nothing without your go-ahead. |
+| [`peliqan-help`](skills/peliqan-help) | `/peliqan:peliqan-help` | Quick reference for all of the above. |
 
-One install gives you all of them. You don't have to remember the commands either: describe what you want ("rebuild this Power BI report", "is our order sync ready to go live?", "the pipeline failed last night") and Claude picks the right skill.
+One install gives you all of them. The commands above are the plugin form; with a manual install or on claude.ai they are `/peliqan-sync` and so on. You don't have to remember them either: describe what you want ("rebuild this Power BI report", "is our order sync ready to go live?", "the pipeline failed last night") and Claude picks the right skill.
 
 ## How they fit together
 
@@ -88,7 +97,7 @@ claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp
 .mcp.json                    # bundles the Peliqan MCP server
 docs/
 ├── README.md                # how the docs are organised, diagram style
-├── images/                  # shared diagrams
+├── images/                  # logo and shared diagrams
 ├── dashboards/              # one folder per framework
 └── syncs/
 skills/
@@ -101,4 +110,6 @@ skills/
 
 ---
 
-Questions, or want help getting started? Get in touch with your Peliqan contact.
+<p align="center">
+  <sub>Built and maintained by the <a href="https://peliqan.io">Peliqan</a> team. Questions, or help getting started: ask your Peliqan contact, or reach us through <a href="https://peliqan.io">peliqan.io</a>.</sub>
+</p>

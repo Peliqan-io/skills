@@ -20,10 +20,10 @@ Keep two business systems in sync: orders, stock, customers, fulfilments, refund
 
 ## 1. What it is
 
-A **sync worker** is one Peliqan data app per system pair. It reads changed records on one side and writes them to the other, in either direction. Each side is an app's API or a table in your warehouse, so API ⇄ API, warehouse → app and app → warehouse all work. Nothing has to be loaded into the warehouse first. The warehouse only holds the worker's state.
+A **sync worker** is one Peliqan data app per system pair. It reads changed records on one side and writes them to the other, in either direction. By default it talks to both apps' APIs directly, so nothing has to be loaded into the warehouse first: the warehouse only holds the worker's state. If a Peliqan pipeline already loads the source app into the warehouse, a sync can read that table instead of calling the API. Writing *to* a warehouse table is possible too, but only when you explicitly ask for it; for loading data into the warehouse, a pipeline is usually the better tool.
 
 <p align="center">
-  <img src="images/sync-architecture.svg" width="900" alt="The sync worker runs in Peliqan, reads changes from system A and system B through their APIs or SQL via their Peliqan connections, and writes back to either side. Each side can be an app or a warehouse table. The worker's state (link table, run log, monitor views) lives in the Peliqan data warehouse.">
+  <img src="images/sync-architecture.svg" width="900" alt="The sync worker runs in Peliqan, reads changes from system A and system B through their APIs via their Peliqan connections, or from a pipeline table, and writes back to either app. The worker's state (link table, run log, monitor views) lives in the Peliqan data warehouse.">
 </p>
 
 Every worker follows these principles:
@@ -32,7 +32,7 @@ Every worker follows these principles:
 |---|---|
 | **Every write is traceable** | Each record written to a target is logged in a *link table*: which source record, which target record, when, and with what result. You can always answer "where did this order go?" with SQL. |
 | **Idempotent by design** | Running a sync twice never creates duplicates. A record is only rewritten when the fields it owns have actually changed. |
-| **Nothing gets lost silently** | Incremental reads use safe bookmarks, failed records are retried, and records that keep failing are parked in a dead-letter view instead of disappearing. |
+| **Nothing gets lost silently** | Incremental reads use safe bookmarks, a read that fails stops the sync loudly instead of looking empty, and every failed record keeps its error and a copy of the source record until it is replayed or parked in a dead-letter view. |
 | **One record never stops the run** | An error on one order is recorded and the run carries on with the next one. |
 | **State lives next to your data** | The link table, run log and monitor views are plain warehouse tables. Query them, chart them, alert on them. |
 | **You own the code** | A worker is one readable Python script in your own account, not a black box. You can review, change and extend it. |
@@ -46,7 +46,7 @@ Every worker follows these principles:
 | Transactions that must be created in another system | Webshop orders → sales orders in the ERP, refunds → credit notes |
 | Master data that must stay aligned | Products, prices, customers, addresses |
 | Operational status that flows back | Stock levels from the ERP to the webshop, fulfilment and tracking info |
-| Warehouse data that must reach an app, or the other way | A cleaned customer table → the CRM; app records → a warehouse table |
+| Warehouse data that must reach an app | A cleaned customer table → the CRM |
 | Logic that a standard connector can't express | Custom field mappings, tax rules, parent/child dependencies, branching on a status |
 
 When something else is the better choice:
@@ -84,10 +84,12 @@ A worker contains a shared framework and one or more **syncs**. Each sync moves 
 3. **Moves the bookmark forward**, but only past records that were actually processed.
 
 <p align="center">
-  <img src="images/sync-run.svg" width="900" alt="One run of a sync worker: the enabled syncs run in registry order; each record goes through source, lookup, map and hash, writeback, response and link row; failures are recorded in the link table as source_error or target_error and retried on the next run; the link table holds sync_name, both ids, a hash per direction, the source JSON, action, status and attempt.">
+  <img src="images/sync-run.svg" width="900" alt="One run of a sync worker: the enabled syncs run in registry order; each record goes through source, lookup, map and hash, writeback, response and link row; failures are recorded in the link table as source_error or target_error and replayed once the cause is fixed; the link table holds sync_name, both ids, a hash per direction, the source JSON, action, status and attempt.">
 </p>
 
-Records that fail are retried on the next runs. After a set number of attempts they're marked `dead` and show up in the dead-letter view for someone to look at.
+A record that fails keeps its error and a copy of the source record in the link table. It is tried again when it changes in the source, or replayed from that copy once the cause is fixed. After a set number of failed attempts it is marked `dead` and shows up in the dead-letter view for someone to look at.
+
+At the end of every run the worker prints a summary per sync (status, duration, processed, errors, skipped) and, for every bookmark, whether it moved.
 
 Each worker creates these objects in your warehouse:
 
@@ -104,7 +106,7 @@ Each worker creates these objects in your warehouse:
 
 ### What you need
 
-- A Peliqan account with a **connection for each app** the worker talks to (or the warehouse table it reads or writes).
+- A Peliqan account with a **connection for each app** the worker talks to (or the pipeline table it reads).
 - **Claude** with the Peliqan skills installed and the Peliqan MCP connected. See [Installation](../../README.md#installation).
 
 ### Build: `peliqan-sync`
@@ -128,19 +130,23 @@ What Claude does, step by step:
 3. **Asks for the sync specification**: direction, field mapping, which system owns which fields, dependencies. You can paste a row from your requirements matrix.
 4. **Writes and tests the code locally**: a compile check, a lint check, the bookmark test and a simulated run against fake systems, before anything touches your data.
 5. **Deploys the data app** to your account and verifies that what's deployed matches what was tested.
-6. **Runs a limited first test** (`TEST_LIMIT`) and reads the logs.
+6. **Runs a limited first test** (`TEST_LIMIT`, one sync at a time through `SYNCS_ENABLED`) and reads the logs.
 7. **Runs a second time to prove idempotence**: no new writes, only "no change, skip".
 8. **Hands over** with a list of the design decisions taken (taxes, draft vs. confirmed, variants, locations…) for you to review.
 
 Scheduling the worker and lifting the test limit stay **your decision**.
 
-Adding a sync is real development work, typically about three functions of code, not a configuration toggle. What the framework gives you is that every sync automatically gets duplicate protection, change detection, retries, error logging and safe bookmarks, so the effort goes into your business logic instead of plumbing.
+Adding a sync is real development work, typically about three functions of code, not a configuration toggle. What the framework gives you is that every sync automatically gets duplicate protection, change detection, error logging, replay and safe bookmarks, so the effort goes into your business logic instead of plumbing.
 
 ### Audit: `peliqan-audit`
 
 > Audit our order sync. Can we go live?
 
 Claude reads the worker's code, configuration and recent runs, and scores them against the framework rules: safe bookmarks, duplicate protection, error handling, leftover test settings, growing error counts, duplicates in the link table. You get a verdict (**ready**, **ready with warnings**, **not ready**), a scorecard with evidence for every check and a fix list ranked by impact. The audit never changes anything.
+
+> Are there orders that never made it to the ERP?
+
+For that question the worker audits itself. After you agree, Claude asks the worker to run a **reconciliation** at the end of its next run: records missing in the target, fields that drifted from the source, and links whose source record is gone. It reads both systems but writes to neither; the findings land in an `audit_<pair>` table that Claude reads back and hands over to support.
 
 ### Support: `peliqan-support`
 
@@ -154,7 +160,7 @@ Claude finds the worker, compares the last good run with the first bad one, quer
 |---|---|
 | Shopify | Verified in production |
 | Odoo | Verified in production |
-| Peliqan warehouse tables | Supported as source or target |
+| Peliqan pipeline tables | Supported as a source, instead of the app's API. As a target only on explicit request. |
 | Other apps (Salesforce, SAP, Klaviyo, …) | Supported through a checklist. Claude works through it with you and records the answers in a new system file before building. It never guesses how an API behaves. |
 
 ### Safety rules built into the skills

@@ -1,69 +1,81 @@
-# Framework Contract (v4)
+# Framework Contract (v6)
 
 Single source of truth for the API a sync trio may rely on. The worker-builder
 emits a framework that satisfies this; the sync-builder emits syncs that call
-only these. If this file and the code disagree, `assets/worker_template.py` wins.
+only these. If this file and the code disagree, `assets/worker_template.py` wins,
+and the disagreement is a bug to fix in the same change.
 
-**Framework is versioned.** The worker carries `FRAMEWORK_VERSION = "4"`. Data
+**Framework is versioned.** The worker carries `FRAMEWORK_VERSION = "6"`. Data
 apps are single files (no cross-app import), so the framework is embedded and
 the skill owns the canonical copy. When it changes, bump the version here and in
 the template; the sync-builder upgrades a stale worker's framework block in place
-(see "Upgrading" below). This is what prevents the drift seen between the first
-two hand-built workers.
+(§11). This is what prevents the drift seen between the first two hand-built
+workers.
 
-**v3 (breaking fix): warehouse objects must be CATALOG-REGISTERED.** Verified on
-a live account: `dbconn.insert`/`dbconn.fetch` only work on tables registered in
-Peliqan's catalog. Raw DDL via `dbconn.execute` creates the Postgres object but
-does NOT register it — insert/fetch then 404 (`ERROR_TABLE_DOES_NOT_EXIST`)
-while the DDL "succeeded", producing v2's failure mode: a green-looking run that
-writes to the target with **no link rows** (duplicates on every run) and still
-advances bookmarks. v3's `ensure_schema` therefore: runs the idempotent DDL →
-probes the tables with a real fetch → if unregistered, calls
-`pq.refresh_schema(connection_name=dw_name, schema_name=LINK_SCHEMA)` (a
-synchronous catalog sync) → re-probes → **raises** if still unregistered, and
-`process_all` runs no syncs on that failure. Two traps to never reintroduce:
-do not create the link table with `dbconn.write()` (write-created tables are
-pipeline-flagged and `dbconn.insert` is rejected on them), and do not treat a
-failed link write as a warning-only event when the whole table is unusable.
+## Version history
+
+**v6 (one framework again).** Two different "v5" lines existed: this repo's
+(the production learnings above) and one shipped through claude.ai that added
+the warehouse as a source and an in-worker audit. v6 is both: everything in
+v5 below, plus `dwh_drain` (a Peliqan pipeline table as the source, §7, raising
+on a failed query like the API drains) and the opt-in audit (`audit_all`,
+`record_audit`, `audit_{PAIR}` findings table, §12). The warehouse as a sync
+*target* is not in the baseline (§7a). A worker reporting `"5"` is either line:
+read its code (`dwh_drain` / `audit_all` = the claude.ai line,
+`prefetch_links` / `note_skip` = this one) before upgrading (§11).
+
+**v5 (production learnings folded in).** Everything learned running the
+Shopify ⇄ Odoo worker live, which used to sit in SKILL.md as amendments, is now
+in the template: the per-run link cache (`prefetch_links` with write-through),
+aggregated skips (`note_skip` / `write_skips`), `SYNCS_ENABLED`, a run summary
+with durations and a Bookmarks block, `WORKER_VERSION` plus a changelog,
+`ensure_schema` probing once, `is_ok` rejecting a functional error inside a 200,
+`shopify_drain` and `find_or_create`. Dropped from the baseline because no live
+worker used them: multi-store scoping (`MULTI_STORE`, `store_id`, `company_id`),
+`reconcile_deletes` and `shopify_list_incremental`. Generate one only when asked
+(§8, §10).
 
 **v4 (data-loss fix): incremental drains MUST use `>=`, never strict `>`.**
 Verified on a live account (2026-07-15): source timestamps have **second
 granularity**, so several records routinely share one timestamp (bulk imports,
-batch edits). With a strict `>` filter, any run that stops mid-cluster —
-`TEST_LIMIT`, a crash, a page cap — sets the bookmark to that shared second and
+batch edits). With a strict `>` filter, any run that stops mid-cluster
+(`TEST_LIMIT`, a crash, a page cap) sets the bookmark to that shared second and
 the NEXT run skips the remaining records at that same second **permanently**:
 no link row, no error row, no dead-letter entry, and their children orphan-freeze
 forever. (Live incident: 3 products silently lost this way; recovered only by a
-manual bookmark rewind.) The rules:
+manual bookmark rewind.) The rules are in §6.
 
-- Where the sync writes the filter itself (a GraphQL/SQL/OData `updated-at`
-  filter), use `>=` against the bookmark.
-- Where a connector controls the comparator (`list(bookmark=...)`) and its
-  strictness is unknown, pass `bookmark_with_overlap(bookmark)` (§3) instead of
-  the raw bookmark.
-- The boundary records this re-reads each run are absorbed by the framework's
-  idempotency (hash-skip / already-linked) — a handful of no-ops per run is the
-  designed cost.
-- This is system-agnostic: it applies to ANY source with second-granularity
-  change timestamps (Shopify `updatedAt`, Odoo `write_date`, Salesforce
-  `SystemModstamp`, SAP `CHANGEDAT`, ...). A new system reference
-  (`references/systems/<system>.md`) must state the timestamp granularity and
-  whether the comparator is under our control.
+**v3 (breaking fix): warehouse objects must be CATALOG-REGISTERED.** Verified on
+a live account: `dbconn.insert`/`dbconn.fetch` only work on tables registered in
+Peliqan's catalog. Raw DDL via `dbconn.execute` creates the Postgres object but
+does NOT register it: insert/fetch then 404 (`ERROR_TABLE_DOES_NOT_EXIST`)
+while the DDL "succeeded", producing v2's failure mode: a green-looking run that
+writes to the target with **no link rows** (duplicates on every run) and still
+advances bookmarks. `ensure_schema` therefore runs the idempotent DDL, probes the
+tables once with a real fetch, calls `pq.refresh_schema(connection_name=dw_name,
+schema_name=LINK_SCHEMA)` if they are unregistered, re-probes only if that ran,
+and **raises** if they are still unregistered; `process_all` then runs no syncs.
+`refresh_schema` only works on a schema the catalog already knows, so the schema
+is registered once with the MCP `create_schema` tool before the first run.
+Two traps to never reintroduce: do not create the link table with
+`dbconn.write()` (write-created tables are pipeline-flagged and `dbconn.insert`
+is rejected on them), and do not treat a failed link write as a warning-only
+event when the whole table is unusable.
 
 ## 1. Naming conventions
 
 - **sync_name**: `<sourcesys>_<sourceobj>_to_<targetsys>_<targetobj>`.
 - **fns**: `fieldmapping_*`, `process_<one record>`, `process_<sync>` (the loop).
 - **Two systems fixed at creation, named concretely everywhere** (`shopify_*` /
-  `odoo_*`). No `system_a`/`system_b` indirection — a different pair is a
+  `odoo_*`). No `system_a`/`system_b` indirection: a different pair is a
   generation-time rename, not a runtime abstraction.
 
-## 2. Warehouse objects — **per worker**, created by it (`ensure_schema`, first thing in `process_all`)
+## 2. Warehouse objects, **per worker**, created by it (`ensure_schema`, first thing in `process_all`)
 
 Each worker (system pair) owns its **own** link table, run log and views, named
 after its pair via top-of-file constants (`LINK_SCHEMA`, `PAIR`, `LINK_TABLE =
 f"link_{PAIR}"`, `RUNS_TABLE = f"runs_{PAIR}"`). This is what lets several
-workers for different pairs coexist — a shared table with fixed `shopify_id`/
+workers for different pairs coexist: a shared table with fixed `shopify_id`/
 `odoo_id` columns can't serve a Klaviyo⇄Odoo worker. All the helper queries build
 the table name from `_LT = f"{LINK_SCHEMA}.{LINK_TABLE}"`, so a sync never names
 the table itself.
@@ -73,80 +85,115 @@ shared by all syncs **in this worker**:
 
 | column | meaning |
 | --- | --- |
-| `id` (bigint PK) | unique per row, `_next_link_id()` |
+| `id` (bigint PK) | unique per row, `_next_link_id()` (monotonic guard) |
 | `sync_name`, `action` (insert/update), `status` | see below |
 | `attempt` (int) | failure count; **set by the framework**, not the sync |
-| `shopify_id` / `odoo_id` | the two identities (text) — named for this pair |
-| `store_id` / `company_id` | nullable; multi-store scoping (§8) |
+| `shopify_id` / `odoo_id` | the two identities (text), named for this pair |
 | `shopify_source_hash` / `odoo_source_hash` | `stable_hash` of owned fields, per direction |
 | `shopify_source_json` / `odoo_source_json` | full source record, for replay |
 | `error_detail`, `timestamp` | error text (error rows only); ISO `...Z` |
 
-`status` values: `ok`, `source_error`, `target_error`, and **`dead`** (poison —
+`status` values: `ok`, `source_error`, `target_error`, and **`dead`** (poison:
 reached `MAX_ATTEMPTS`, stops retrying). Effective link = latest `ok` per
 (sync_name, id). Append-only: every upsert is a new row.
 
-Also created (per worker): `{LINK_SCHEMA}.{RUNS_TABLE}` (run log) and pair-suffixed
-views `v_link_shopify_latest_{PAIR}`, `v_link_odoo_latest_{PAIR}`,
-`v_dead_letter_{PAIR}`, `v_run_summary_{PAIR}`.
+Also created (per worker): `{LINK_SCHEMA}.{RUNS_TABLE}` (run log),
+`{LINK_SCHEMA}.{AUDIT_TABLE}` (audit findings, §12) and pair-suffixed views
+`v_link_shopify_latest_{PAIR}`, `v_link_odoo_latest_{PAIR}`,
+`v_dead_letter_{PAIR}`, `v_run_summary_{PAIR}`, `v_audit_latest_{PAIR}`.
 
 *Legacy:* the first hand-built worker used `link_tables.link_table`. To reuse that
 data, set `LINK_TABLE = "link_table"` and `RUNS_TABLE = "sync_runs"` instead of
-the per-pair names.
+the per-pair names. A v4 worker's table keeps its `store_id`/`company_id`
+columns after an upgrade; v5 leaves them empty.
 
 ## 3. Helper API (a sync may call ONLY these)
 
-Config/const: `TEST_LIMIT`, `MAX_ATTEMPTS`, `MULTI_STORE`, `FRAMEWORK_VERSION`,
-`_limit_reached(processed)`.
+Config/const: `FRAMEWORK_VERSION`, `WORKER_VERSION`, `TEST_LIMIT`, `MAX_ATTEMPTS`,
+`SYNCS_ENABLED`, `AUDIT_EVERY_N_RUNS`, `AUDIT_LIMIT`, `RUN_AT`, `_limit_reached(processed)`.
 
 State/bookmark: `get_bookmark`, `set_bookmark`, `sort_by_updated_at(records, ts_field=)`,
-`advance_bookmark(hw, ts)`, `bookmark_with_overlap(bookmark, fmt=, seconds=)` (v4 —
-for comparators we don't control), `simulate_bookmark_run(records, current, limit, ts_field=)`.
+`advance_bookmark(hw, ts)`, `bookmark_with_overlap(bookmark, fmt=, seconds=)`
+(for comparators we don't control), `simulate_bookmark_run(records, current, limit, ts_field=)`.
+The four pure ones are exec'd by `scripts/test_bookmarks.py`: keep them, with
+these signatures, in every worker.
 
-Hash: `stable_hash(dict) -> str` — canonical JSON md5 over the **owned/mapped
+Hash: `stable_hash(dict) -> str`: canonical JSON md5 over the **owned/mapped
 fields**. Use this; never concatenate `str(a)+str(b)`.
 
 Link table:
 - `insert_link_row(sync_name, action, status, shopify_id=, odoo_id=,`
   `shopify_source_hash=, odoo_source_hash=, shopify_source_json=,`
-  `odoo_source_json=, store_id=, company_id=, error_detail=) -> bool`
-  (attempt counting and promotion to `dead` happen **inside** this call.)
-- `find_target(sync_name, shopify_id, store_id=, company_id=) -> (odoo_id, shopify_source_hash)`
-- `find_link_by_odoo(sync_name, odoo_id, store_id=, company_id=) -> (shopify_id, odoo_source_hash)`
+  `odoo_source_json=, error_detail=) -> bool`. Attempt counting and promotion
+  to `dead` happen **inside** this call. Three retries plus an error-row
+  fallback guard the insert; an `ok` row is written through to the link cache.
+- `find_target(sync_name, shopify_id) -> (odoo_id, shopify_source_hash)`
+- `find_link_by_odoo(sync_name, odoo_id) -> (shopify_id, odoo_source_hash)`
+- `prefetch_links(sync_name, side, keys, chunk=500)`, `side` = `"shopify"` or
+  `"odoo"`: loads the latest `ok` link for these keys in one query per chunk.
+  Call it once per page (a paged drain) or once per drained list, for this
+  sync **and** for every parent sync the loop resolves. Misses are cached as `(None, None)`; a failed
+  query caches nothing, so `find_*` falls back to per-key lookups. *(Without
+  it, one live run did 280+ queries for zero writes.)*
 
-Ops/reliability:
-- `record_run(sync_name, started_at, counts, status=, detail=)` — called by
+Logging and ops:
+- `note_skip(sync_name, reason="no change in hash -> skip")`: count a skip
+  instead of logging a line per record. `process_all` calls `write_skips()`
+  after every sync (also when it failed), one line per sync and reason. Keep
+  the default text: it is the idempotence proof in the log.
+- `record_run(sync_name, started_at, counts, status=, detail=)`: called by
   `process_all`; a sync just returns its counts dict.
-- `replay_source(sync_name, process_one, statuses=, include_dead=, limit=)` —
+- `replay_source(sync_name, process_one, statuses=, include_dead=, limit=)`:
   re-drives error/dead rows from stored source JSON; `process_one(sync_name, record)`.
-- `reconcile_deletes(sync_name, live_source_ids, apply_delete, side=)` — diffs
-  ok-links vs live ids, calls `apply_delete(link_row)` per orphan.
-- `ensure_schema()` — idempotent bootstrap of everything in §2: DDL **plus
-  catalog registration** (`pq.refresh_schema`) **plus a fetch-probe verify**.
-  Raises if the tables stay unregistered; `process_all` then runs no syncs.
+  This is how a failed record is retried once its cause is fixed: the normal
+  run has already moved its bookmark past it.
+- `ensure_schema()`: idempotent bootstrap of everything in §2 (see v3 above).
 
-Transport (in the worker): Shopify `gid_to_numeric`, `shopify_list_incremental`,
-`shopify_graphql`, `graphql_user_errors`; Odoo `odoo_object_add/update/search`,
-`odoo_search_read_incremental`, `extract_new_id`; and `is_ok(result)`.
+Transport (in the worker), all raising on a response that is not ok:
+- `is_ok(result)`: `status == "success"` **and** no `detail.error` (Odoo fault
+  in a 200) and no `detail.errors` (Shopify top-level errors, e.g.
+  ACCESS_DENIED with `data: null`).
+- Shopify: `gid_to_numeric`, `shopify_graphql`, `graphql_user_errors`,
+  `shopify_drain(query, root, bookmark, extra_filter=, page_size=, max_pages=)`.
+- Odoo: `odoo_object_add/update/search`, `odoo_search_read_incremental`,
+  `extract_new_id`, `find_or_create(model, domain, record, cache, key, strict=)`.
+- Warehouse as source: `dwh_drain(table, ts_field, bookmark, id_field=, where=, page_size=)`
+  (§7 and `references/systems/peliqan-dwh.md`).
+
+Audit (§12, never called from a sync loop): `record_audit(sync_name, check_name,
+shopify_id=, odoo_id=, detail=)`; `audit_all`, `audit_due` and `audit_backlog`
+are called by `process_all`.
 
 ## 4. The 6 steps (every single-record function)
 
 1. **Validate source** → `insert_link_row(..., "source_error", ...)`, return.
 2. **Lookup link** (`find_target` / `find_link_by_odoo`) → target id + last hash → insert vs update.
-3. **Map + hash** (`fieldmapping_*` → `(shape, stable_hash(owned))`). Equal hash → skip. Shape may be one record or richer (header + lines, multiple models).
-4. **Writeback** — one target record per call; fan out / branch / multi-model as the domain needs.
-5. **Handle response** — `is_ok`; for GraphQL also `graphql_user_errors` (functional error on a 200). Attempt/`dead` promotion is automatic in step 6.
-6. **Append link row** — `ok` with hash on success; else an error status with `error_detail` and no hash (retries next run until `dead`).
+3. **Map + hash** (`fieldmapping_*` → `(shape, stable_hash(owned))`). Equal hash → `note_skip`, return `"skip"`. Shape may be one record or richer (header + lines, multiple models).
+4. **Writeback**: one target record per call; fan out / branch / multi-model as the domain needs.
+5. **Handle response**: `is_ok`; for GraphQL also `graphql_user_errors` (functional error on a 200). Attempt/`dead` promotion is automatic in step 6.
+6. **Append link row**: `ok` with hash on success; else an error status with `error_detail` and no hash.
 
-Return `"ok" | "skip" | "error"` from the single-record fn so the loop can count.
+Return `"ok" | "skip" | "error"` from the single-record fn so the loop can
+count. Log a line only for records that are written or fail, never for skips.
 
 ## 5. The loop (`process_<sync>`)
 
 - `bookmark = get_bookmark(sync_name) or <epoch in this source's format>`.
-- Read the changed set (incremental), `sort_by_updated_at(..., ts_field=<source field>)`.
+- Read the changed set with a `>=` drain, `sort_by_updated_at(..., ts_field=<source field>)`
+  when the drain does not already return time order.
+- `prefetch_links` per page or per drained list (this sync and its parents).
 - Loop with `_limit_reached`; per-record try/except that records a row and continues; `advance_bookmark` only over reached records; orphan-freeze on a parent dep.
 - **Return `{"processed": n, "errors": e, "skipped": s}`** so `process_all` logs the run.
-- Register in `SYNC_REGISTRY`: `{"name": SYNC_X, "run": process_x, "replay": <optional>}`, in dependency order (parents first, Shopify→Odoo before Odoo→Shopify).
+- Register in `SYNC_REGISTRY`: `{"name": SYNC_X, "run": process_x, "replay": <optional>, "audit": <optional>}`, in dependency order (parents first, Shopify→Odoo before Odoo→Shopify).
+
+`process_all` skips a sync that `SYNCS_ENABLED` switches off, lists the on and
+off syncs in one caption, and ends with a run summary: per sync the status,
+duration and processed/errors/skipped, then a **Bookmarks** block with
+`before -> after` or `unchanged`. A bookmark that does not move means "nothing
+new" OR "frozen on an orphan", and nothing else in the log tells those apart.
+Every summary tuple has the same arity, including the disabled branch: a
+shorter one crashed a live run with a `ValueError` that read as "Worker aborted
+unexpectedly".
 
 ## 6. Bookmark rules
 
@@ -157,49 +204,142 @@ parent isn't linked yet.
 
 **Comparator (v4): `>=`, never strict `>`.** Timestamps have second granularity
 and clusters of equal timestamps are normal; a truncated run + strict `>` loses
-the rest of the cluster permanently (see the v4 header note). Self-written
-filters use `>=`; unknown-comparator paths (connector `list(bookmark=)`) get
+the rest of the cluster permanently. Self-written filters use `>=`;
+unknown-comparator paths (a connector `list(bookmark=)`) get
 `bookmark_with_overlap(bookmark)`. Boundary re-reads are absorbed by hash-skip.
-The pure test `scripts/test_bookmarks.py` asserts this behaviour — run it
+This applies to ANY source with second-granularity change timestamps (Shopify
+`updatedAt`, Odoo `write_date`, Salesforce `SystemModstamp`, SAP `CHANGEDAT`...);
+a new system reference must state the granularity and whether the comparator is
+under our control. `scripts/test_bookmarks.py` asserts these rules; run it
 offline before deploying a worker or a new sync.
+
+**A truncated unsorted read is a loss too.** A drain that returns records in
+cursor order (not time order) and stops at a page cap would let the bookmark
+jump past records it never read. `shopify_drain` therefore raises at
+`max_pages` instead of returning a partial list.
 
 ## 7. Transport conventions
 
 One record per mutation/write call; a single-row search may return a dict
-(normalise to list); paginate reads with the source cursor; prefer a
-cursor-paged `fetch_changed_*` with an explicit `>=` filter over a connector
-`list(bookmark=)` for large sets. **System-specific transport quirks (query
-syntax, id shapes, functional-error detection on 200s, permission failure
-modes, implicit filters) live in `references/systems/<system>.md`** — the
-sync-builder reads the two files for the worker's pair; this contract stays
-system-agnostic.
+(normalise to list); paginate reads with the source cursor; write the `>=`
+filter yourself (`shopify_drain`, `odoo_search_read_incremental`) rather than
+relying on a connector `list(bookmark=)`. A drain **raises** on a response that
+is not ok, so a permission problem or an API fault surfaces as a failed sync
+with an unchanged bookmark (it self-heals once fixed), never as "0 records".
+`find_or_create` never falls through to a create after a failed search.
+**System-specific transport quirks (query syntax, id shapes, functional-error
+detection on 200s, permission failure modes, implicit filters) live in
+`references/systems/<system>.md`**: the sync-builder reads the two files for the
+worker's pair; this contract stays system-agnostic.
 
-## 8. Multi-store / multi-company
+**The warehouse as a source.** When the source system already lands in the
+warehouse through a Peliqan pipeline, a sync may read that table with
+`dwh_drain` instead of calling the source API: fewer API calls, no rate limits.
+Only the read changes; ids, ownership, writeback and error detection still come
+from the system's own reference file. The new data-loss mode is **pipeline
+lag**: drain against `bookmark_with_overlap(bookmark, fmt=<table format>,
+seconds=<one pipeline interval>)`, or bookmark on the table's own load
+timestamp if it has one. Details and the build-time probe:
+`references/systems/peliqan-dwh.md`.
 
-Off by default (`MULTI_STORE = False`); the `store_id`/`company_id` columns exist
-regardless so the key never needs retrofitting. When `True`, pass `store_id` /
-`company_id` to `insert_link_row` and the `find_*` calls scope on them. Decide at
-build time (a single `shopify_id ↔ odoo_id` mapping breaks the moment the same
-product exists in two stores).
+## 7a. The warehouse as a target: only when explicitly asked
+
+A new sync **never** writes to the warehouse by default: its target is the
+other system's API. Write to a warehouse table only when the user explicitly
+asks for it (for example "land the Odoo invoices in a table for reporting"),
+and say first that a pipeline usually does that job better. When it is asked:
+
+- The target table lives in its own schema, registered once with the MCP
+  `create_schema` tool, and is created and probed like the link table
+  (`ensure_schema` pattern: DDL, refresh, fetch-probe, raise). Never create it
+  with `dbconn.write()`: a write-created table is pipeline-flagged and
+  `dbconn.insert` is rejected on it.
+- The 6 steps still hold: the target id is the row's primary key, a link row is
+  written for every record, and hash-skip keeps it idempotent. An update is a
+  keyed `UPDATE` (or the platform's upsert, probed at build time); never a
+  truncate-and-reload.
+- Name it in the hand-over as a deliberate exception.
+
+The one standing exception is the audit's own findings table (§12), which the
+framework creates and writes itself.
+
+## 8. Multi-store / multi-company (not in the baseline)
+
+No live worker needed it, so v5 and v6 do not ship it. When a pair really has
+several Shopify stores or Odoo companies, decide it at build time (a single
+`shopify_id ↔ odoo_id` mapping breaks the moment the same product exists in two
+stores): add `store_id`/`company_id` columns, pass them to `insert_link_row`,
+and scope `find_*` and `prefetch_links` on them, in the worker and with a
+version bump. Say what it costs: every helper must stay consistent with it at
+every later change.
 
 ## 9. Reliability summary (all generic; every sync inherits)
 
 Two-layer idempotency (hash-skip + append-only link) · attempt counter → `dead`
-poison handling · `replay_source` from stored snapshots · run log + monitor views
-· delete-reconciliation primitive · nothing aborts the run.
+poison handling · `replay_source` from stored snapshots · per-run link cache
+with write-through · loud source errors · run log, run summary and monitor
+views · nothing aborts the run except an unusable link table.
 
 ## 10. Known limitations / open items
 
-- **Single-variant assumption** (`variants[0]`) — a multi-variant matcher is planned.
-- **Delete semantics** (unlink vs archive) are still a per-sync decision; the
-  detection primitive (`reconcile_deletes`) now exists, the handler does not.
+- **Single-variant assumption** (`variants[0]`): a multi-variant matcher is planned.
+- **Delete semantics** (unlink vs archive) are a per-sync decision and not in
+  the baseline. When a sync needs it: after a full drain, diff the `ok` links
+  against the live source ids and hand each orphan to a handler that archives
+  or unlinks and writes a delete link row. Generate it only when asked.
 - **Ingest-layer dedupe** (duplicate webhook events landing in the DWH) is
-  separate from writeback dedupe and depends on confirming webhook-relay mode —
+  separate from writeback dedupe and depends on confirming webhook-relay mode:
   a build-time question, not yet a helper.
 
 ## 11. Upgrading a worker's framework
+
+From the claude.ai v5 line (it has `dwh_drain` and `audit_all`, no
+`prefetch_links`): the v6 framework block contains both, so the replacement is
+the same. A sync that drains a pipeline table keeps calling `dwh_drain`; it now
+raises on a failed query instead of logging and stopping, so the sync reports
+FAILED with an unchanged bookmark. Per-sync `audit_*` functions below the marker
+stay as they are; a `reconcile_deletes` call inside one keeps its own copy of
+that helper.
+
 
 When `FRAMEWORK_VERSION` here is newer than a worker's, the sync-builder should
 replace everything from the header down to the `>>> SYNC INSERTION POINT <<<`
 marker with the current template's framework, preserve the syncs and
 `SYNC_REGISTRY` below the marker, and confirm the diff before `update_data_app`.
+
+From v4 to v5, also check the syncs themselves:
+- A sync that calls `shopify_list_incremental` moves to `shopify_drain`, or
+  keeps a local copy of the old helper below the marker.
+- A sync that passes `store_id`/`company_id` means the worker used multi-store:
+  stop and add the §8 block before upgrading.
+- A sync that calls `reconcile_deletes` keeps its own copy below the marker.
+- Replace per-record `st.text("no change in hash -> skip")` with `note_skip`,
+  and add `prefetch_links` per page. Neither is required for correctness
+  except the write-through, which the framework does on its own.
+- Carry over the worker's connection names, `PAIR`, `TEST_LIMIT` and
+  `SYNCS_ENABLED`, bump `WORKER_VERSION` and add a changelog line.
+
+## 12. Audit (opt-in, in the worker)
+
+The framework can audit itself after the syncs of a run. It is **read-only
+towards both systems**: no link rows, no bookmarks, no writes to the source or
+the target. Its only write is the findings table `{LINK_SCHEMA}.audit_{PAIR}`
+(`run_at`, `sync_name`, `check_name`, the two ids, `detail`), with
+`v_audit_latest_{PAIR}` showing the last audit.
+
+- **Trigger:** state `{"audit": {"requested": true, "syncs": [...]?}}` (one MCP
+  `update_data_app_state`), or every `AUDIT_EVERY_N_RUNS` runs. Default 0: only
+  on request. `audit_due` clears the request.
+- **Free for every sync:** `audit_backlog`, the ids whose latest link row is
+  not `ok`, per status.
+- **Per sync, optional:** an `"audit": audit_<sync>` entry in `SYNC_REGISTRY`
+  that records `missing` (source ids without an `ok` link), `drift` (owned
+  fields that differ between the mapped source and the target, bounded by
+  `AUDIT_LIMIT`) and `orphan` findings via `record_audit`, and returns
+  `{check: n}`. It may read both systems, never write. A thrown exception is
+  recorded as `audit_error` and the audit continues.
+
+The `peliqan-audit` skill (`references/sync.md`, part B) covers when to use it,
+how to write an `audit_<sync>` and how to hand findings over to support.
+`scripts/test_dwh_and_audit.py` is the offline test for this section and for
+`dwh_drain`.

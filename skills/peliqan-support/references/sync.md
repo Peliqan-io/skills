@@ -40,8 +40,8 @@ top of the file, record:
   Legacy hand-built workers use `link_tables.link_table` / `sync_runs`.
 - `SYNCS_ENABLED` — **check this first.** A sync switched off here is the single
   most common false alarm; the run caption also lists which syncs are OFF.
-- `TEST_LIMIT`, `MAX_ATTEMPTS`, `MULTI_STORE` — a non-zero `TEST_LIMIT` left in
-  place caps every run and looks exactly like "the sync stopped halfway".
+- `TEST_LIMIT`, `MAX_ATTEMPTS`: a non-zero `TEST_LIMIT` left in place caps
+  every run and looks exactly like "the sync stopped halfway".
 - The registration tuples in `process_all` — which syncs exist, in what order,
   and which have a parent dependency.
 
@@ -90,17 +90,29 @@ to see whether a failure is new, retrying, or long dead.
 | Records permanently missing after a run that was truncated (crash, page cap, `TEST_LIMIT`) | Pre-v4 strict `>` bookmark filter dropping the equal-second tail (live incident 2026-07-15) | `FRAMEWORK_VERSION` < 4 | Upgrade the framework block to v4 (`>=` drain rule) via `peliqan-sync`, then rewind the bookmark to just before the truncated run |
 | Same records failing every run, `attempt` climbing, then `dead` | Real functional rejection by the target (validation, permissions, missing related record) | `error_detail` on the latest rows; the target's `references/systems/<system>.md` failure modes | Fix the mapping or the target-side prerequisite, then `replay_source` |
 | Target returned 200 but nothing was written | Functional error hidden in a successful response (GraphQL `userErrors`, Odoo fault in a 200) | Whether the record function checks `graphql_user_errors` / `is_ok` | Add the check per contract step 5, redeploy, replay |
+| Sync reported FAILED with `source_error: ... ACCESS_DENIED` or an Odoo fault name (`builtins.ValueError`, `AccessError`) | The source refused the read: missing permission (Shopify Protected Customer Data, API scopes), or a module/field that doesn't exist on the target instance | The error text in the run log; the failure modes in the system's `references/systems/<system>.md` | Fix the access or the field. The bookmark did not move, so the sync catches up on its own once fixed |
+| A pre-v5 worker reads "0 records" while the source clearly has changes | `is_ok` without the `detail.error` / `detail.errors` check, so a failed read looked empty | `FRAMEWORK_VERSION` < 5; run a read by hand to see the error | Upgrade the framework block to v5 via `peliqan-sync` |
+| Sync FAILED with `hit max_pages` | More changed records since the bookmark than the drain's page cap | The count in the message | Raise `max_pages` for that drain, or narrow it with `extra_filter`, via `peliqan-sync` |
 | Everything reported as skipped | Hash-skip on unchanged records — healthy | `no change in hash -> skip` lines | Nothing; report as working |
 | "Worker aborted unexpectedly" / `ValueError` on unpack | Run-summary tuple arity differing on the disabled-sync branch | The `SYNCS_ENABLED` branch in `process_all` | Make every run-summary tuple the same arity |
 | Writes fail with the table missing, or `dbconn.insert/fetch` can't see it | Raw DDL without catalog registration — `ensure_schema` must DDL → `refresh_schema` → fetch-probe | Whether `ensure_schema` raised in the log | Restore contract-compliant `ensure_schema` |
-| Duplicates in the target | Link lookup missing or mis-scoped (`store_id` / `company_id` not passed under `MULTI_STORE`) | Multiple `ok` rows for one source id with different target ids | Scope the `find_*` and `insert_link_row` calls, then reconcile the duplicates with the developer |
-| Run suddenly slow, hundreds of queries for few writes | Missing per-batch `prefetch_links` cache | Duration in the run summary vs processed count | Add `prefetch_links` with write-through per the production learnings |
-| A child sync writes before its parent's link exists in the same run | `insert_link_row` not updating the link cache on `ok` | Order of the registration tuples and the cache write-through | Restore write-through (correctness, not speed) |
+| Duplicates in the target | A link lookup missing from the record function; a second app (often a sandbox copy) writing with the same `PAIR`; a link row lost after a successful write; or, on a pre-v5 multi-store worker, `store_id` / `company_id` not passed | Multiple `ok` rows for one source id with different target ids; `list_data_apps` for another app with the same `PAIR`; "Could not write link row" warnings in the log | Fix the cause (own `PAIR` per sandbox, restore the lookup or the link-insert retry), then reconcile the duplicates with the developer |
+| Run suddenly slow, hundreds of queries for few writes | `prefetch_links` not called per page, or a pre-v5 framework without the link cache | Duration in the run summary vs processed count | Call `prefetch_links` per page for the sync and its parents (contract §3) |
+| A child sync treats records as orphans although the parent sync linked them in the same run | `insert_link_row` not writing `ok` rows through to the link cache (a hand-edited framework) | The registration order and `insert_link_row` against the template | Restore the template's `insert_link_row` (correctness, not speed) |
+| A warehouse-sourced sync: run green, bookmark `unchanged`, but the source system has newer records | The pipeline feeding the table stopped or lags; the drain reads nothing new | The `max(ts_field)` freshness line in the run log; `get_connection_pipeline_runs` for that pipeline | Fix the pipeline; the sync catches up on its own (no rewind needed) |
+| A warehouse-sourced sync silently misses some records that are in the table now | Pipeline lag: the record landed after the bookmark had passed its timestamp, and the overlap is shorter than one pipeline interval (or missing) | The sync's `bookmark_with_overlap(..., seconds=)` vs the pipeline schedule; the record's timestamp vs the bookmark history | Set the overlap to at least one interval (or bookmark on the table's load timestamp) via `peliqan-sync`, then rewind to before the oldest missed record |
+| Sync FAILED with `source_error: dwh_drain(...)` | The pipeline table was renamed, moved or isn't registered | The table name in the sync vs `list_tables` | Point the sync at the right table via `peliqan-sync` |
 
 If the symptom isn't in this table, work it from the contract's 6-step
 per-record path: which of validate → lookup → build → send → handle response →
 append link row did the record last reach? The link row's `status` and `action`
 answer that directly.
+
+**Coming from an audit.** Findings in `v_audit_latest_{PAIR}` (from the
+`peliqan-audit` reconciliation) arrive here as work: `missing` with a backlog
+row → fix the cause, then replay; `missing` with no link row → a bookmark rewind
+to before the record; `drift` and `orphan` → the developer decides first (who is
+right; which delete semantics), then the fix goes through `peliqan-sync`.
 
 ## Step 5 — Propose the fix, then wait
 
@@ -114,8 +126,9 @@ state plainly what it will do and get a yes:
 - **Bookmark rewind** — `set_bookmark` to just before the suspect window.
   Re-reads are absorbed by hash-skip, so a modest rewind is cheap; say which
   timestamp and why.
-- **Delete reconciliation** — `reconcile_deletes` only when the developer asks
-  for orphan cleanup, never as part of a routine repair.
+- **Delete reconciliation** — only when the developer asks for orphan cleanup
+  and the worker has a delete handler (contract §10), never as part of a
+  routine repair.
 - **Code change + redeploy** — edit through `peliqan-sync` so the output stays
   one runnable single-file data-app, run
   `python ../../peliqan-sync/scripts/test_bookmarks.py <worker.py>` before deploying, then

@@ -13,7 +13,7 @@ Shopify-specific belongs here.
 | Timestamp granularity | **seconds** — equal-timestamp clusters are normal (bulk imports) |
 | Comparator under our control? | GraphQL search filter: **yes** → use `updated_at:>='{bookmark}'`. Connector `list(bookmark=)`: **no** → pass `bookmark_with_overlap(bookmark)` |
 | Record id shape | gid `gid://shopify/<Type>/<numeric>`; store the numeric (`gid_to_numeric`). MailingAddress gids can carry a query string (`?model_name=...`) — strip it |
-| Incremental read | cursor-paged GraphQL: `<objects>(first: N, after: $cursor, query: $q)` with `pageInfo { hasNextPage endCursor }`; page cap as a safety net |
+| Incremental read | cursor-paged GraphQL through `shopify_drain`: `<objects>(first: $first, after: $cursor, query: $q)` with `pageInfo { hasNextPage endCursor }`. Cursor order is not `updatedAt` order, so the drain returns the full set for the caller to sort, and raises at its page cap instead of returning a partial list |
 | Functional error on a 200 | TWO layers: top-level `detail.errors` (e.g. ACCESS_DENIED yields 200 + `data: null` — looks like an empty set if unchecked) AND per-mutation `userErrors` (`graphql_user_errors`) |
 | Writeback | GraphQL mutations, **one record per call** (e.g. `productVariantsBulkUpdate` with exactly 1 variant) |
 | Delete semantics | archive (status) vs true delete; GDPR webhooks for customers — per-sync decision |

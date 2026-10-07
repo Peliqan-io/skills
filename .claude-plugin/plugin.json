@@ -1,7 +1,7 @@
 {
   "name": "peliqan",
-  "version": "1.0.0",
-  "description": "Build, audit and support Peliqan syncs and dashboards with Claude.",
+  "version": "1.1.0",
+  "description": "Build, audit and support Peliqan syncs and dashboards with Claude, on the patterns the Peliqan team runs in production.",
   "author": {
     "name": "Peliqan",
     "url": "https://peliqan.io"

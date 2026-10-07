@@ -10,7 +10,8 @@ This maps 1:1 onto the requirements-doc sync matrix. For the sync, collect:
 | input | example | notes |
 | --- | --- | --- |
 | source system + object | Shopify `Order` | drives which read helper + timestamp |
-| target system + model(s) | Odoo `sale.order`, `sale.order.line` | |
+| source channel | the API (default), or its Peliqan pipeline table | a table → `dwh_drain` + `systems/peliqan-dwh.md`; record table, `ts_field`, pipeline interval + overlap in the sync's header comment |
+| target system + model(s) | Odoo `sale.order`, `sale.order.line` | a warehouse table only on explicit request (contract §7a) |
 | direction | Shopify → Odoo | which `find_*` to use |
 | source of truth / owned fields | Shopify owns header, taxes | **hash covers only these** |
 | field mapping | title→name, ... + transforms (e.g. `weight_to_kg`) | the body of `fieldmapping_*` |
@@ -20,10 +21,44 @@ This maps 1:1 onto the requirements-doc sync matrix. For the sync, collect:
 | delete semantics | archive / unlink / n/a | only if the delete flow is in scope |
 
 If a field is owned by the *other* system, either omit it from the mapping or
-seed it once and never again (see sync 2 — "seed once then Odoo-owned").
+seed it once and never again (see sync 2: "seed once, then Odoo-owned").
 
 Ask only for what the matrix row doesn't already answer. If the dev pastes a
 matrix row + a field list, that is usually the whole spec.
+
+## Sync rules: answer these per mapping row
+
+Each rule comes from the live Shopify⇄Odoo worker; each one cost real data or a
+re-drive when it was missed.
+
+- **Ownership is per FIELD, not per sync.** Seed-once fields are skipped on an
+  already-linked record; source-owned fields need their own write path that also
+  runs on linked records, with a diff check so repeat runs write nothing. Orders:
+  header Shopify-owned (re-pushed on hash change), lines seeded once. State it
+  in the sync's header comment.
+- **Never push a value the source may not have set.** *(Live: records created
+  without a price, the target's default of 1.0 became the "owner" value, and 18
+  real webshop prices were wiped.)* Add a threshold guard, and switch a push
+  direction on only once the source is demonstrably populated: backfill, prove,
+  pin the hash, plan the re-drive. Stock: a `STOCK_SKIP_ZERO_QTY` guard on by
+  default.
+- **Check write-through to a shared parent** before seeding a field (a
+  per-variant price wrote through to the shared template price and would have
+  flattened its siblings).
+- **Expensive side effects get their own change signal**, not the record hash:
+  track the image URL in its own field and download only when *that* changed.
+- **Fan-out children get their own sync name** as a separate identity space in
+  the link table: link rows yes, registry entry no (e.g. `SYNC_CUSTOMERS` under
+  the orders sync, keyed on the Shopify customer id or `guest:<email>`).
+  `write_skips` flushes their skip counts too.
+- **Supporting records** (a partner, a tax, a unit of measure) go through
+  `find_or_create` with a per-run cache: `strict=True` where the write cannot
+  proceed without the id, `strict=False` where it can.
+- **Extending a hash re-drives every linked record once.** Say so up front and
+  state the procedure: reset the bookmark, force the stored hash, run, verify
+  the counts.
+- **Prefetch per page or per drained list, never per record**, and prefetch the
+  parent syncs' links the loop resolves, not only its own.
 
 ## The three examples are a pattern, not a menu
 
@@ -79,15 +114,18 @@ branching), that belongs in the worker + a contract bump — not hidden in a syn
    domain actually needs — don't assume it looks like the example.
 2. Fetch the current worker script (Peliqan MCP `get_data_app`).
 3. Write the trio:
-   - optional query/mutation constant(s), single-line
+   - optional query/mutation constant(s), single-line; a Shopify read query
+     takes `($first: Int!, $cursor: String, $q: String)` for `shopify_drain`
    - `fieldmapping_*` → `(target_shape, stable_hash(owned_fields))`; the shape
      can be one record or a structure (header + lines + …). **Use `stable_hash`
-     over a dict of the owned fields — never `str(a)+str(b)` concatenation.**
+     over a dict of the owned fields, never `str(a)+str(b)` concatenation.**
    - `process_<one record>` → the 6 steps (contract §4); **return
-     `"ok" | "skip" | "error"`**. DLQ/`dead` promotion is automatic inside
-     `insert_link_row` — don't hand-roll retry counting.
-   - `process_<sync>` → the loop (contract §5): correct `ts_field`/epoch, orphan-
-     freeze if there's a parent dep, and **return `{"processed","errors","skipped"}`**.
+     `"ok" | "skip" | "error"`**; `note_skip` instead of a log line on a skip.
+     DLQ/`dead` promotion is automatic inside `insert_link_row`: don't
+     hand-roll retry counting.
+   - `process_<sync>` → the loop (contract §5): a `>=` drain, correct
+     `ts_field`/epoch, `prefetch_links` per page or list, orphan-freeze if there's a
+     parent dep, and **return `{"processed","errors","skipped"}`**.
 4. Add a `SYNC_* = "..."` constant near the other sync constants.
 5. Insert the trio at the SYNC INSERTION POINT (before `SYNC_REGISTRY`).
 6. Register an entry in `SYNC_REGISTRY`, in dependency order (parents first,
@@ -95,13 +133,17 @@ branching), that belongs in the worker + a contract bump — not hidden in a syn
    `{"name": SYNC_X, "run": process_x, "replay": <process_one or adapter, optional>}`.
    Add a `replay` handler when replay from the stored source JSON is meaningful
    (simple 1:1 syncs: the `process_<one record>` directly; fan-in syncs: a small
-   adapter that resolves parents first — see `replay_one_variant`). Omit it when
+   adapter that resolves parents first, see `replay_one_variant`). Omit it when
    the normal drain already reprocesses (see sync 3).
-7. If the domain has a delete flow, add a handler and call `reconcile_deletes`
-   (detection is generic; unlink-vs-archive is your handler's decision).
-8. Update the worker (Peliqan MCP `update_data_app`) or return the edited script.
-   If the worker's `FRAMEWORK_VERSION` is older than the contract, upgrade the
-   framework block first (contract §11).
+7. If the domain has a delete flow and the dev asked for it, add the detection
+   and handler described in contract §10 (unlink vs archive is the handler's
+   decision).
+8. Bump `WORKER_VERSION`, add a changelog line, run the offline checks
+   (worker-build.md, step 5), then update the worker (Peliqan MCP
+   `update_data_app`) and verify the deploy, or return the edited script. If
+   the worker's `FRAMEWORK_VERSION` is older than the contract, upgrade the
+   framework block first (contract §11). Switch the new sync on in
+   `SYNCS_ENABLED` for a staged first run only, one sync at a time.
 
 ## Self-check before delivering
 
@@ -113,16 +155,24 @@ branching), that belongs in the worker + a contract bump — not hidden in a syn
 - Single-record fn returns `ok/skip/error`; loop returns the counts dict.
 - Bookmark advances only over reached records; correct field/format; never
   compared against another source's bookmark; drain filter is `>=` (or
-  `bookmark_with_overlap` on an opaque comparator) per contract §6 — run
+  `bookmark_with_overlap` on an opaque comparator) per contract §6. Run
   `python scripts/test_bookmarks.py <worker.py>` before delivering.
+- `prefetch_links` per page or list for this sync and every parent it resolves; skips
+  go through `note_skip`, not a log line per record.
+- Every rule in "Sync rules" above answered for each mapping row.
 - Registered in `SYNC_REGISTRY` in the right dependency position, with a `replay`
-  handler where meaningful.
-- No new helper invented that isn't in the contract — if you need one, it belongs
-  in the worker (bump the version), not hidden in a sync.
+  handler where meaningful, and an `audit` fn only if the dev asked for one
+  (`assets/sync_examples/dwh_and_audit.py`).
+- A DWH-sourced sync drains with `bookmark_with_overlap(..., seconds=<one
+  pipeline interval>)` and normalises rows to the API shape the mapping expects,
+  so switching channel re-drives nothing.
+- The target is the other system, not the warehouse, unless the dev asked.
+- No new helper invented that isn't in the contract: if you need one, it belongs
+  in the framework (bump the version), not hidden in a sync.
 
 ## This is code generation, not config
 
 Be honest with the dev: each sync is ~3 real Python functions, not a config
 row. The skill enforces the pattern and reuses the framework; it does not make
 a sync a one-liner. The payoff is that every sync inherits idempotency,
-hash-skip, retry, error rows and bookmarks for free.
+hash-skip, error rows, replay and bookmarks for free.
