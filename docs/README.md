@@ -1,29 +1,29 @@
 # Documentation
 
-One folder per framework. The [root README](../README.md) is the front door and only links here.
+One folder per pattern. The [root README](../README.md) is the front door and only links here.
 
-| Framework | Docs | Build skill |
+| Pattern | Docs | Build skill |
 |---|---|---|
 | Syncs | [syncs/](syncs/README.md) | `peliqan-sync` |
 | Dashboards | [dashboards/](dashboards/README.md) | `peliqan-dashboard` |
 
-## Adding a framework
+## Adding a pattern
 
-Adding a framework takes four things:
+Adding a pattern takes four things:
 
-1. **A build skill:** `skills/peliqan-<framework>/`.
-2. **A reference file in audit and in support:** `skills/peliqan-audit/references/<framework>.md` and `skills/peliqan-support/references/<framework>.md`, plus a row in the routing table of each `SKILL.md`.
-3. **A docs folder:** `docs/<framework>/README.md`, with images in `docs/<framework>/images/`.
-4. **One row** in the frameworks table of the root README, one in the table above, and the new skill in `skills/peliqan-help/SKILL.md`.
+1. **A build skill:** `skills/peliqan-<pattern>/`.
+2. **A reference file in audit and in support:** `skills/peliqan-audit/references/<pattern>.md` and `skills/peliqan-support/references/<pattern>.md`, plus a row in the routing table of each `SKILL.md`.
+3. **A docs folder:** `docs/<pattern>/README.md`, with images in `docs/<pattern>/images/`.
+4. **One row** in the patterns table of the root README, one in the table above, and the new skill in `skills/peliqan-help/SKILL.md`.
 
 ## Page structure
 
-Every `docs/<framework>/README.md` uses the same sections, so readers who know one framework find their way in the next:
+Every `docs/<pattern>/README.md` uses the same sections, so readers who know one pattern find their way in the next:
 
 1. **What it is**: one diagram plus the principles.
 2. **When to use it**: good fit, better alternatives, before / after.
 3. **How it works**: the mechanism, with one diagram.
-4. **Using the skills**: what you need, then build, audit and support, plus framework-specific safety rules.
+4. **Using the skills**: what you need, then build, audit and support, plus pattern-specific safety rules.
 
 Deeper material (requirements, risks, QA) goes in a separate page in the same folder.
 
