@@ -14,7 +14,7 @@ Adding a framework takes four things:
 1. **A build skill:** `skills/peliqan-<framework>/`.
 2. **A reference file in audit and in support:** `skills/peliqan-audit/references/<framework>.md` and `skills/peliqan-support/references/<framework>.md`, plus a row in the routing table of each `SKILL.md`.
 3. **A docs folder:** `docs/<framework>/README.md`, with images in `docs/<framework>/images/`.
-4. **One row** in the frameworks table of the root README, one in the table above, and the new skill in `skills/peliqan-help/SKILL.md`.
+4. **One row** in the skills table of the root README (with the docs link), one in the table above, and the new skill in `skills/peliqan-help/SKILL.md`.
 
 ## Page structure
 
