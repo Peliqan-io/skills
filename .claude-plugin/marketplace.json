@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "peliqan",
-  "description": "Peliqan skills for Claude: build, audit and support syncs and dashboards on your Peliqan account.",
+  "description": "Peliqan skills for AI agents: build, audit and support syncs and dashboards on your Peliqan account.",
   "owner": {
     "name": "Peliqan",
     "url": "https://peliqan.io"

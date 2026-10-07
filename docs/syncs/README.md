@@ -1,6 +1,6 @@
 # Syncs
 
-Keep two business systems in sync: orders, stock, customers, fulfilments, refunds… Claude builds the sync on a proven framework, deploys it as a data app on your Peliqan account, and checks it before and after go-live.
+Keep two business systems in sync: orders, stock, customers, fulfilments, refunds… The AI builds the sync on a proven framework, deploys it as a data app on your Peliqan account, and checks it before and after go-live.
 
 | | |
 |---|---|
@@ -65,7 +65,7 @@ You want every new webshop order to show up in your ERP as a sales order.
 
 > Add an order sync from the webshop to the ERP: sales order with order lines, customer as contact.
 
-Claude inspects your account, writes the sync on the framework, tests it offline, deploys it, runs a limited test and proves on a second run that nothing gets written twice. Every order it touches is traceable in your warehouse.
+The AI inspects your account, writes the sync on the framework, tests it offline, deploys it, runs a limited test and proves on a second run that nothing gets written twice. Every order it touches is traceable in your warehouse.
 
 ---
 
@@ -107,7 +107,7 @@ Each worker creates these objects in your warehouse:
 ### What you need
 
 - A Peliqan account with a **connection for each app** the worker talks to (or the pipeline table it reads).
-- **Claude** with the Peliqan skills installed and the Peliqan MCP connected. See [Installation](../../README.md#installation).
+- **An AI agent** with the Peliqan skills installed and the Peliqan MCP connected. See [Installation](../../README.md#installation).
 
 ### Build: `peliqan-sync`
 
@@ -115,15 +115,15 @@ Each worker creates these objects in your warehouse:
 
 > Build a sync worker between our webshop and our ERP.
 
-Claude checks your account for existing workers, connections and tables, then builds an *empty* worker that contains only the framework, ready for syncs.
+The AI checks your account for existing workers, connections and tables, then builds an *empty* worker that contains only the framework, ready for syncs.
 
 **Add a sync to an existing worker**
 
 > Add an order sync from the webshop to the ERP: sales order with order lines, customer as contact.
 
-You can also ask for both at once ("set up the product and order sync between the webshop and the ERP"). Claude will then ask which syncs you want and how to run the first test safely.
+You can also ask for both at once ("set up the product and order sync between the webshop and the ERP"). The AI will then ask which syncs you want and how to run the first test safely.
 
-What Claude does, step by step:
+What the AI does, step by step:
 
 1. **Inspects your account** first: connection names, existing data apps, the warehouse schema and a few sample rows. That answers most questions before it asks you anything.
 2. **Probes the target** for the modules and fields a sync depends on, so it doesn't build a sync on a field that doesn't exist.
@@ -142,17 +142,17 @@ Adding a sync is real development work, typically about three functions of code,
 
 > Audit our order sync. Can we go live?
 
-Claude reads the worker's code, configuration and recent runs, and scores them against the framework rules: safe bookmarks, duplicate protection, error handling, leftover test settings, growing error counts, duplicates in the link table. You get a verdict (**ready**, **ready with warnings**, **not ready**), a scorecard with evidence for every check and a fix list ranked by impact. The audit never changes anything.
+The AI reads the worker's code, configuration and recent runs, and scores them against the framework rules: safe bookmarks, duplicate protection, error handling, leftover test settings, growing error counts, duplicates in the link table. You get a verdict (**ready**, **ready with warnings**, **not ready**), a scorecard with evidence for every check and a fix list ranked by impact. The audit never changes anything.
 
 > Are there orders that never made it to the ERP?
 
-For that question the worker audits itself. After you agree, Claude asks the worker to run a **reconciliation** at the end of its next run: records missing in the target, fields that drifted from the source, and links whose source record is gone. It reads both systems but writes to neither; the findings land in an `audit_<pair>` table that Claude reads back and hands over to support.
+For that question the worker audits itself. After you agree, the AI asks the worker to run a **reconciliation** at the end of its next run: records missing in the target, fields that drifted from the source, and links whose source record is gone. It reads both systems but writes to neither; the findings land in an `audit_<pair>` table that the AI reads back and hands over to support.
 
 ### Support: `peliqan-support`
 
 > Orders stopped arriving in the ERP since Tuesday.
 
-Claude finds the worker, compares the last good run with the first bad one, queries the link table for the affected records and matches the symptom to a known cause. You get the evidence, the root cause and a concrete fix. Replaying records, rewinding a bookmark or redeploying only happens after you say yes.
+The AI finds the worker, compares the last good run with the first bad one, queries the link table for the affected records and matches the symptom to a known cause. You get the evidence, the root cause and a concrete fix. Replaying records, rewinding a bookmark or redeploying only happens after you say yes.
 
 ### Supported systems
 
@@ -161,11 +161,11 @@ Claude finds the worker, compares the last good run with the first bad one, quer
 | Shopify | Verified in production |
 | Odoo | Verified in production |
 | Peliqan pipeline tables | Supported as a source, instead of the app's API. As a target only on explicit request. |
-| Other apps (Salesforce, SAP, Klaviyo, …) | Supported through a checklist. Claude works through it with you and records the answers in a new system file before building. It never guesses how an API behaves. |
+| Other apps (Salesforce, SAP, Klaviyo, …) | Supported through a checklist. The AI works through it with you and records the answers in a new system file before building. It never guesses how an API behaves. |
 
 ### Safety rules built into the skills
 
-- **A run is a write.** Claude never runs a worker against a live target just to see what happens. It tests with a record limit, a sandbox copy or by reading the link table.
+- **A run is a write.** The AI never runs a worker against a live target just to see what happens. It tests with a record limit, a sandbox copy or by reading the link table.
 - **Test with realistic data.** A dummy order without discounts, shipping or deviating taxes doesn't test those mappings, so the skill seeds proper test records first.
 - **Sandbox = a separate copy.** A test copy of a worker gets its own link table and bookmarks, so it can never duplicate records into your live system.
 - **Nothing is deleted** unless you ask for it explicitly.

@@ -1,6 +1,6 @@
 # Dashboards
 
-Dashboards on your Peliqan warehouse, deployed as a data app. Rebuild a report from any BI tool, start from scratch, or build on tables you already have. Claude sets up the data model the dashboard needs and verifies every number on real records before it builds anything on top of it.
+Dashboards on your Peliqan warehouse, deployed as a data app. Rebuild a report from any BI tool, start from scratch, or build on tables you already have. The AI sets up the data model the dashboard needs and verifies every number on real records before it builds anything on top of it.
 
 | | |
 |---|---|
@@ -75,7 +75,7 @@ You have a sales report in a BI tool and want it as a dashboard on your Peliqan 
 
 > Rebuild the "Sales overview" page of this report as a dashboard.
 
-Claude sets up the data model, catalogs every visual on that page, translates each formula literally, checks it on one real record against the report, and only then builds the dashboard. Every check is kept in a `CHECK` schema, so "how do we know this is right?" always has an answer.
+The AI sets up the data model, catalogs every visual on that page, translates each formula literally, checks it on one real record against the report, and only then builds the dashboard. Every check is kept in a `CHECK` schema, so "how do we know this is right?" always has an answer.
 
 ---
 
@@ -85,10 +85,10 @@ Claude sets up the data model, catalogs every visual on that page, translates ea
   <img src="images/build-flow.svg" width="900" alt="Build flow: 1 set up the data model the dashboard needs, 2 catalog every visual in the confirmed scope, 3 translate each formula literally into SQL in one place, 4 verify on one real record (kept in the CHECK schema), with a loop back to translate on a mismatch, then after your confirmation 5 build the dashboard on the consumer layer and 6 document it. Ground truth is the existing report's formulas, bindings and screenshots, or the rules you confirm.">
 </p>
 
-1. **Data model first.** Claude inspects what's in your warehouse and sets up the light or full model, following the naming you already use.
-2. **Catalog the scope.** For a report you're replacing, you confirm which report or page. Claude records every visual's type, fields and styling, and checks that the data behind it exists. From scratch, Claude asks which KPIs and visuals you want and how each is defined.
+1. **Data model first.** The AI inspects what's in your warehouse and sets up the light or full model, following the naming you already use.
+2. **Catalog the scope.** For a report you're replacing, you confirm which report or page. The AI records every visual's type, fields and styling, and checks that the data behind it exists. From scratch, the AI asks which KPIs and visuals you want and how each is defined.
 3. **Translate literally.** Each formula becomes SQL in the business-logic layer, with its sign conventions, filters and scopes intact, even when two related measures look inconsistent. That inconsistency may be intentional. From scratch, each definition is written down and confirmed by you first.
-4. **Verify on one real record.** Claude picks a record you can check, hand-computes the expected value and compares it with the SQL output, field by field. A mismatch goes back to step 3.
+4. **Verify on one real record.** The AI picks a record you can check, hand-computes the expected value and compares it with the SQL output, field by field. A mismatch goes back to step 3.
 5. **Build** the dashboard on the consumer layer. This happens only after you confirm the numbers are verified.
 6. **Document** in two versions: technical (SQL, field mappings, formula comparisons) and plain language (no code).
 
@@ -102,7 +102,7 @@ After go-live, **freshness** and **load time** are checked as their own passes. 
 
 - A Peliqan account with the **source data** in the warehouse (loaded by connectors, or written by a sync).
 - When replacing a report: the **report file** (e.g. a PBIX), its **formulas**, and **screenshots** of the rendered pages. Partial access helps too: a few pasted formulas are enough to verify the visuals that use them.
-- **Claude** with the Peliqan skills installed and the Peliqan MCP connected. See [Installation](../../README.md#installation).
+- **An AI agent** with the Peliqan skills installed and the Peliqan MCP connected. See [Installation](../../README.md#installation).
 
 ### Build: `peliqan-dashboard`
 
@@ -112,13 +112,13 @@ After go-live, **freshness** and **load time** are checked as their own passes. 
 
 > Set up reporting layers for our project data, with a dashboard on top.
 
-Claude previews the stages, then checks in at fixed points: the scope, whether a number is confirmed, and when to move from verifying to building. It also asks before assuming a title or a logo.
+The AI previews the stages, then checks in at fixed points: the scope, whether a number is confirmed, and when to move from verifying to building. It also asks before assuming a title or a logo.
 
 ### Audit: `peliqan-audit`
 
 > Check our sales dashboard before we switch off the old report.
 
-Claude checks four things and gives you the same verdict, scorecard and fix list as for any audit:
+The AI checks four things and gives you the same verdict, scorecard and fix list as for any audit:
 - **Data model:** whether it fits the need, has one place per rule, and whether the dashboard reads only the consumer layer.
 - **Correctness:** against the source report or the agreed rules.
 - **Presentation:** visual types, number formatting and column names.
@@ -128,11 +128,11 @@ Claude checks four things and gives you the same verdict, scorecard and fix list
 
 > The dashboard numbers don't match the old report anymore.
 
-Claude first works out whether the problem is **dashboard-side or warehouse-side**, and whether the data is **stale** (stopped updating) or **wrong** (current but different). It then follows lineage down the layers, or isolates one record, to find the layer where the value first diverges. If the cause is stale data, it stops at the diagnosis and never triggers a resync itself.
+The AI first works out whether the problem is **dashboard-side or warehouse-side**, and whether the data is **stale** (stopped updating) or **wrong** (current but different). It then follows lineage down the layers, or isolates one record, to find the layer where the value first diverges. If the cause is stale data, it stops at the diagnosis and never triggers a resync itself.
 
 ### Safety rules built into the skills
 
-- **The ground truth wins.** Claude doesn't "fix" a source formula that looks unconventional; it asks.
+- **The ground truth wins.** The AI doesn't "fix" a source formula that looks unconventional; it asks.
 - **Business rules never go into the dashboard script**, not even as a quick fix.
 - **Verification queries aren't deleted** without your confirmation.
 - **No resyncs, no publishing to other tools.** Documentation is handed to you as files; pushing it to Notion or elsewhere is a separate request.

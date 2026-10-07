@@ -10,7 +10,7 @@
 <h1 align="center">Peliqan Skills</h1>
 
 <p align="center">
-  <em>Describe what you need. Claude builds it on your Peliqan account, checks it, and helps when something breaks.</em>
+  <em>Describe what you need. AI builds it on your Peliqan account, checks it, and helps when something breaks.</em>
 </p>
 
 <p align="center">
@@ -21,16 +21,31 @@
 
 <p align="center">
   <strong>Build &middot; Audit &middot; Support</strong><br>
-  <sub>The same patterns our own team uses in production, packaged as skills for Claude</sub>
+  <sub>The same patterns our own team uses in production, packaged as skills for AI agents</sub>
 </p>
 
 ---
 
-Peliqan Skills teach Claude how to work on your [Peliqan](https://peliqan.io) account the way we do. Claude talks to your account through the Peliqan MCP server: it inspects connections and tables, builds and deploys, and reads run logs. Anything that writes to your account waits for your go-ahead.
+Peliqan Skills teach AI agents how to work on your [Peliqan](https://peliqan.io) account the way we do. The AI talks to your account through the Peliqan MCP server: it inspects connections and tables, builds and deploys, and reads run logs. Anything that writes to your account waits for your go-ahead.
 
-## Frameworks <img src="https://img.shields.io/badge/beta-E07B39?style=flat-square" alt="Beta">
+## Installation
 
-Proven patterns for what you build on Peliqan. Claude builds, audits and supports each one with its own skills.
+**Claude app:** Settings → Plugins → **Add marketplace** → `https://github.com/Peliqan-io/skills`, then install **peliqan**.
+
+**Claude Code:** send these one at a time:
+
+```
+/plugin marketplace add Peliqan-io/skills
+/plugin install peliqan@peliqan
+```
+
+One plugin gives you every skill and the Peliqan MCP server. The first time a skill uses the MCP, you sign in with your Peliqan account.
+
+No plugins, the MCP server by hand, or checking that it works: see [INSTALL.md](INSTALL.md).
+
+## Frameworks <img src="https://img.shields.io/badge/beta-ED7D2B?style=flat&labelColor=383838" alt="Beta">
+
+Proven patterns for what you build on Peliqan. AI builds, audits and supports each one with its own skills.
 
 | Framework | What you get | Docs |
 |---|---|---|
@@ -39,7 +54,7 @@ Proven patterns for what you build on Peliqan. Claude builds, audits and support
 
 More frameworks will be added the same way, each with its own build skill and docs.
 
-## Skills <img src="https://img.shields.io/badge/beta-E07B39?style=flat-square" alt="Beta">
+## Skills <img src="https://img.shields.io/badge/beta-ED7D2B?style=flat&labelColor=383838" alt="Beta">
 
 | Skill | Command | What it does |
 |---|---|---|
@@ -49,7 +64,7 @@ More frameworks will be added the same way, each with its own build skill and do
 | [`peliqan-support`](skills/peliqan-support) | `/peliqan:peliqan-support` | **Support** when something is broken anywhere in your account: a sync, a pipeline, a data app, an API endpoint, a stale table. Finds the root cause and proposes a fix. Changes nothing without your go-ahead. |
 | [`peliqan-help`](skills/peliqan-help) | `/peliqan:peliqan-help` | Quick reference for all of the above. |
 
-One install gives you all of them. The commands above are the plugin form; with a manual install or on claude.ai they are `/peliqan-sync` and so on. You don't have to remember them either: describe what you want ("rebuild this Power BI report", "is our order sync ready to go live?", "the pipeline failed last night") and Claude picks the right skill.
+One install gives you all of them. The commands above are the plugin form; with a manual install or on claude.ai they are `/peliqan-sync` and so on. You don't have to remember them either: describe what you want ("rebuild this Power BI report", "is our order sync ready to go live?", "the pipeline failed last night") and the AI picks the right skill.
 
 ## How they fit together
 
@@ -59,40 +74,10 @@ Every framework follows the same lifecycle. Each framework has its own build ski
   <img src="docs/images/lifecycle.svg" width="900" alt="Build with the framework's build skill, audit with peliqan-audit, then live. Audit sends fixes back to build; live is audited periodically or after a change; when something breaks, peliqan-support finds the root cause and the fix goes back through the build skill.">
 </p>
 
-## Installation
-
-### Claude Code (recommended)
-
-One install gives you all skills plus the Peliqan MCP server:
-
-```
-/plugin marketplace add Peliqan-io/skills
-```
-
-```
-/plugin install peliqan@peliqan
-```
-
-Send these as two separate prompts. The skills are then available as `/peliqan:peliqan-sync`, `/peliqan:peliqan-dashboard`, `/peliqan:peliqan-audit`, `/peliqan:peliqan-support` and `/peliqan:peliqan-help`. The first time a skill uses the Peliqan MCP, you sign in with your own Peliqan account.
-
-### Claude Code (manual)
-
-```bash
-git clone https://github.com/Peliqan-io/skills.git peliqan-skills
-mkdir -p ~/.claude/skills
-cp -R peliqan-skills/skills/* ~/.claude/skills/
-claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp
-```
-
-### claude.ai / Claude Desktop
-
-1. Download this repository and zip each folder under `skills/` separately (each zip must contain its skill folder).
-2. Go to **Settings → Capabilities → Skills** and upload the zips. Upload all of them: audit and support read the rules inside the build skills.
-3. Add the Peliqan MCP server as a custom connector: `https://mcp.eu.peliqan.io/mcp`.
-
 ## Repository layout
 
 ```
+INSTALL.md                   # other install setups
 .claude-plugin/              # plugin manifest: one install for everything
 .mcp.json                    # bundles the Peliqan MCP server
 docs/

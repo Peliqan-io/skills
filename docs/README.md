@@ -27,7 +27,7 @@ Every `docs/<framework>/README.md` uses the same sections, so readers who know o
 
 Deeper material (requirements, risks, QA) goes in a separate page in the same folder.
 
-Docs are for people; `SKILL.md` and `references/` are for Claude. The rules themselves live only in the skill. Docs explain them and link to them, but never copy them.
+Docs are for people; `SKILL.md` and `references/` are for the AI agent. The rules themselves live only in the skill. Docs explain them and link to them, but never copy them.
 
 Keep pages system-neutral ("webshop", "ERP", "system A/B"). Name specific systems only in a "Supported systems" table.
 

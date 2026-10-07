@@ -13,7 +13,7 @@ How a worker and a run work is explained in the [Syncs overview](README.md#3-how
 | **Connections with the exact names the worker uses** (as set in the worker) | The worker connects at start-up. A different name crashes the app before the first sync starts. |
 | **Write access in the target system**, not just read access | Read-only access proves nothing about writes. If the worker creates custom fields in the target, that user must be allowed to. |
 | **A warehouse the worker can write its state to** | The link table, run log and views are created there on the first run. The synced data itself doesn't have to be in the warehouse: the worker reads both sides through their APIs, unless a side is a warehouse table. |
-| **The Peliqan MCP connected to Claude** | So the skills can inspect the account, deploy and read run logs. |
+| **The Peliqan MCP connected to your AI agent** | So the skills can inspect the account, deploy and read run logs. |
 
 > **Verify custom fields after the first run.** If the worker creates custom fields and lacks the permission, the creation fails with only a warning, the run stays green and the mappings to those fields write nothing. Check that the fields exist after the first run.
 

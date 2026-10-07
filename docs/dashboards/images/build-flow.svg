@@ -73,7 +73,7 @@
   <!-- Legend -->
   <path d="M30,336 H970" stroke="#E3E3E3"/>
   <rect x="30" y="352" width="12" height="12" rx="2" fill="#E9EEF4" stroke="#34516E"/><text x="50" y="362" fill="#555" font-size="10px">input from you</text>
-  <rect x="190" y="352" width="12" height="12" rx="2" fill="#FCEFE3" stroke="#ED7D2B"/><text x="210" y="362" fill="#555" font-size="10px">step Claude takes</text>
+  <rect x="190" y="352" width="12" height="12" rx="2" fill="#FCEFE3" stroke="#ED7D2B"/><text x="210" y="362" fill="#555" font-size="10px">step the AI takes</text>
   <rect x="360" y="352" width="24" height="12" rx="6" fill="#FFFFFF" stroke="#ED7D2B"/><text x="392" y="362" fill="#555" font-size="10px">checkpoint: you decide</text>
   <path d="M560,358 H592" stroke="#ED7D2B" stroke-width="1.5" stroke-dasharray="5 4"/><text x="600" y="362" fill="#555" font-size="10px">loop until it matches</text>
 </svg>
