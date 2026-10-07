@@ -89,7 +89,7 @@ SYNCS_ENABLED for the first run) and build worker + syncs in a single pass.
   - sync 2: SYSTEM_A → SYSTEM_B, parent dependency + seed-once (orphan-freeze)
   - sync 3: SYSTEM_B → SYSTEM_A, GraphQL writeback, write_date drain
 
-## Build-time playbook (verified 2026-09-02, account 2792, Shopify V2 ⇄ Odoo V2)
+## Build-time playbook (verified 2026-09-02 on a live Shopify ⇄ Odoo worker)
 
 The order of operations that took a 5-sync worker from zero to two green live
 runs in one session. Every step is there because skipping it cost a run or a
@@ -104,7 +104,7 @@ redeploy that day — follow it in this order.
 2. **Probe the target with a throwaway data-app BEFORE building a sync that
    depends on a module or field.** One `search_read` on `ir.module.module`
    (`stock`, `sale`, `sale_management`, `account`) and one on each field you
-   intend to read. Live: `stock` was *uninstalled* in peliqan.odoo.com (Odoo 18)
+   intend to read. Live: `stock` was *uninstalled* on the target Odoo 18 instance
    so `product.product.qty_available` did not exist — the stock sync was built,
    then switched off. A 10-line probe would have said so first. Delete the probe
    app afterwards (`delete_data_app`).

@@ -1,18 +1,19 @@
 <h1 align="center">Peliqan Skills</h1>
 
 <p align="center">
-  <em>You describe the sync. Claude builds it, tests it and deploys it on your Peliqan account.</em>
+  <em>You describe the sync. Claude builds it, audits it and keeps it running on your Peliqan account.</em>
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/works%20with-Claude%20Code%20%7C%20claude.ai-111111?style=flat-square" alt="Works with Claude Code and claude.ai">
-  <img src="https://img.shields.io/badge/skills-1-111111?style=flat-square" alt="1 skill">
+  <img src="https://img.shields.io/badge/skills-4-111111?style=flat-square" alt="4 skills">
   <img src="https://img.shields.io/badge/verified-Shopify%20%E2%87%84%20Odoo-111111?style=flat-square" alt="Verified on Shopify and Odoo">
   <img src="https://img.shields.io/badge/MCP-Peliqan-111111?style=flat-square" alt="Peliqan MCP">
 </p>
 
 <p align="center">
-  <strong>One worker per system pair &middot; no duplicates &middot; nothing lost silently &middot; code you own</strong>
+  <strong>Build &middot; Audit &middot; Support</strong><br>
+  <sub>One worker per system pair &middot; no duplicates &middot; nothing lost silently &middot; code you own</sub>
 </p>
 
 ---
@@ -31,41 +32,44 @@ You want every new Shopify order to show up in Odoo as a sales order.
 
 Claude inspects your account, writes the sync on a proven framework, tests it offline, deploys it, runs a limited test and proves on a second run that nothing gets written twice. Every order it touches is traceable in your warehouse.
 
-| Skill | What it does |
-|---|---|
-| [`peliqan-sync`](skills/peliqan-sync) | Builds and extends **Reverse ETL sync workers** between two business systems (for example Shopify ⇄ Odoo) as one Peliqan data app. Use it to set up a worker for a system pair, or to add a sync (orders, stock, customers, fulfilment, refunds…) to a worker you already have. |
+## Skills
+
+| Skill | Command | What it does |
+|---|---|---|
+| [`peliqan-sync`](skills/peliqan-sync) | `/peliqan-sync` | **Build.** Sets up a sync worker between two business systems (for example Shopify ⇄ Odoo) as one Peliqan data app, or adds a sync (orders, stock, customers, fulfilment, refunds…) to a worker you already have. |
+| [`peliqan-sync-audit`](skills/peliqan-sync-audit) | `/peliqan-sync-audit` | **Audit.** Checks a worker that looks healthy against the framework rules and its run history, before go-live or after a change. Returns a pass/warn/fail scorecard and a ranked fix list. Read-only. |
+| [`peliqan-sync-support`](skills/peliqan-sync-support) | `/peliqan-sync-support` | **Support.** Something is broken: records not arriving, a stuck bookmark, duplicates, dead-letter rows. Finds the root cause from the code, logs and link table and proposes a fix. Changes nothing without your go-ahead. |
+| [`peliqan-help`](skills/peliqan-help) | `/peliqan-help` | Quick reference for all of the above. |
+
+One install gives you all four. You don't have to remember the commands either: describe what you want ("is our Shopify-Odoo worker ready to go live?", "orders stopped arriving in Odoo") and Claude picks the right skill.
 
 More skills will be added here over time.
 
 **On this page**
 
-1. [Data syncs in Peliqan: how we approach them](#1-data-syncs-in-peliqan-how-we-approach-them)
-2. [Reverse ETL apps: when, why and how](#2-reverse-etl-apps-when-why-and-how)
-3. [Building a sync data app with the skill](#3-building-a-sync-data-app-with-the-skill)
-4. [Installation](#4-installation)
-5. [Repository layout](#5-repository-layout)
+1. [What the skill builds](#1-what-the-skill-builds)
+2. [How a sync worker works](#2-how-a-sync-worker-works)
+3. [Building a sync](#3-building-a-sync)
+4. [Auditing and support](#4-auditing-and-support)
+5. [Installation](#5-installation)
+6. [Repository layout](#6-repository-layout)
 
 ---
 
-## 1. Data syncs in Peliqan: how we approach them
+## 1. What the skill builds
 
-Most integration tools connect systems **point to point**: Shopify talks to Odoo directly, Odoo talks to the CRM directly, and so on. That works for the first link. By the fifth, nobody can tell you what was synced, when, or why a record is missing.
-
-Peliqan puts the **data warehouse in the middle**:
+The skill builds **sync workers**: Peliqan data apps that read from your data warehouse and write records into a business system, such as creating a sales order in Odoo for each new Shopify order. The warehouse sits in the middle, so the worker reads clean tables and keeps all its state next to your data:
 
 ```mermaid
 flowchart LR
-    A[Source system<br/>e.g. Shopify] -- "ETL (connectors)" --> DWH[(Peliqan<br/>data warehouse)]
-    B[Target system<br/>e.g. Odoo] -- "ETL (connectors)" --> DWH
-    DWH -- "Reverse ETL<br/>(sync worker)" --> B
-    DWH -- "Reverse ETL<br/>(sync worker)" --> A
+    A[Source system<br/>e.g. Shopify] -- "connector" --> DWH[(Peliqan<br/>data warehouse)]
+    B[Target system<br/>e.g. Odoo] -- "connector" --> DWH
+    DWH -- "sync worker" --> B
+    DWH -- "sync worker" --> A
     DWH --> R[Reporting, dashboards,<br/>APIs, AI]
 ```
 
-- **ETL**: Peliqan's connectors load data from your systems into the warehouse. This is configured, not coded.
-- **Reverse ETL**: a sync worker reads from the warehouse and writes records **back** into a business system, such as creating a sales order in Odoo for each new Shopify order.
-
-Every sync we build follows these principles:
+Every worker the skill generates follows these principles:
 
 | Principle | What it means for you |
 |---|---|
@@ -78,34 +82,7 @@ Every sync we build follows these principles:
 
 ---
 
-## 2. Reverse ETL apps: when, why and how
-
-### When to use one
-
-A Reverse ETL app fits when **a business process crosses two systems** and records need to be created or updated in the target automatically.
-
-| Good fit | Typical examples |
-|---|---|
-| Transactions that must be created in another system | Shopify orders → Odoo sales orders, refunds → credit notes |
-| Master data that must stay aligned | Products, prices, customers, addresses |
-| Operational status that flows back | Stock levels from the ERP to the webshop, fulfilment and tracking info |
-| Logic that a standard connector can't express | Custom field mappings, tax rules, parent/child dependencies, branching on a status |
-
-When something else is the better choice:
-
-- **You only need reporting or analysis.** Data loaded into the warehouse is already queryable; build a dashboard or query table instead.
-- **It's a one-off migration or export.** A script or a CSV export is simpler.
-- **You need sub-second, event-by-event reactions.** A sync worker runs on a schedule (for example every 5 or 15 minutes). That suits almost all business processes, but not true real-time use cases.
-
-### Why build it on Peliqan
-
-- **The data is already there.** Your connectors have loaded the source data into the warehouse, so the worker reads clean tables instead of calling APIs over and over.
-- **Full transparency.** The link table, run log and monitoring views are plain warehouse tables. You can query them, put them on a dashboard or set alerts on them.
-- **Safe to rerun.** Because syncs are idempotent, a rerun after an incident is a normal action, not a risk.
-- **Built-in error handling.** Retries, dead-lettering and per-record error details come with the framework. You don't rebuild them for every sync.
-- **One worker per system pair.** All syncs between two systems live in one app, run in the right order (parents before children) and share the same reliability framework.
-
-### How it works
+## 2. How a sync worker works
 
 A **worker** is one Peliqan data app per system pair (for example `shopify_odoo`). It contains a shared framework and one or more **syncs**. Each sync moves one kind of object in one direction.
 
@@ -168,14 +145,14 @@ Each worker creates these objects in your warehouse:
 
 ---
 
-## 3. Building a sync data app with the skill
+## 3. Building a sync
 
 The `peliqan-sync` skill teaches Claude how to build these workers the way we build them for customers. It includes the framework contract, a worker template, verified notes per system and an offline test. Claude talks to your account through the **Peliqan MCP server**, so it can inspect your connections and tables, deploy the data app and read the run logs.
 
 ### What you need
 
 - A Peliqan account with a **connection for both systems** (for example Shopify and Odoo), with their data loaded into the warehouse.
-- **Claude** (Claude Code, or claude.ai / Claude Desktop) with this skill installed (see [Installation](#4-installation)).
+- **Claude** (Claude Code, or claude.ai / Claude Desktop) with these skills installed (see [Installation](#5-installation)).
 - The **Peliqan MCP server** connected to Claude: `https://mcp.eu.peliqan.io/mcp`. You sign in with your own Peliqan account the first time it's used.
 
 ### Two ways to use it
@@ -228,36 +205,76 @@ Adding a sync is real development work, typically about three functions of code.
 
 ---
 
-## 4. Installation
+## 4. Auditing and support
 
-### Claude Code
+A sync isn't finished when it's deployed. The other two skills cover the rest of its life:
 
-Copy the skill into your personal (or project) skills folder:
+```mermaid
+flowchart LR
+    B["Build<br/>peliqan-sync"] --> A["Audit<br/>peliqan-sync-audit"]
+    A -- "ready" --> L(["Live"])
+    A -- "fixes needed" --> B
+    L -- "periodic check" --> A
+    L -- "something breaks" --> S["Support<br/>peliqan-sync-support"]
+    S -- "fix" --> B
+```
+
+### Audit: is it ready?
+
+> Audit our Shopify-Odoo worker. Can we go live?
+
+Claude reads the worker's code, configuration and recent runs, and scores them against the framework rules: safe bookmarks, duplicate protection, error handling, leftover test settings, growing error counts, duplicates in the link table. You get a verdict (**ready**, **ready with warnings**, **not ready**), a scorecard with evidence for every check and a fix list ranked by impact. The audit never changes anything.
+
+### Support: what broke?
+
+> Orders stopped arriving in Odoo since Tuesday.
+
+Claude finds the worker, compares the last good run with the first bad one, queries the link table for the affected records and matches the symptom to a known cause. You get the evidence, the root cause and a concrete fix. Replaying records, rewinding a bookmark or redeploying only happens after you say yes.
+
+---
+
+## 5. Installation
+
+### Claude Code (recommended)
+
+One install gives you all skills plus the Peliqan MCP server:
+
+```
+/plugin marketplace add Peliqan-io/skills
+```
+
+```
+/plugin install peliqan@peliqan
+```
+
+Send these as two separate prompts. The skills are then available as `/peliqan:peliqan-sync`, `/peliqan:peliqan-sync-audit`, `/peliqan:peliqan-sync-support` and `/peliqan:peliqan-help`. The first time a skill uses the Peliqan MCP, you sign in with your own Peliqan account.
+
+### Claude Code (manual)
 
 ```bash
 git clone https://github.com/Peliqan-io/skills.git peliqan-skills
 mkdir -p ~/.claude/skills
-cp -R peliqan-skills/skills/peliqan-sync ~/.claude/skills/
-```
-
-Then add the Peliqan MCP server:
-
-```bash
+cp -R peliqan-skills/skills/* ~/.claude/skills/
 claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp
 ```
 
 ### claude.ai / Claude Desktop
 
-1. Download the `skills/peliqan-sync` folder and zip it (the zip must contain the `peliqan-sync` folder).
-2. Go to **Settings → Capabilities → Skills** and upload the zip.
+1. Download this repository and zip each folder under `skills/` separately (each zip must contain its skill folder).
+2. Go to **Settings → Capabilities → Skills** and upload the zips. Upload all of them: audit and support read the framework rules inside `peliqan-sync`.
 3. Add the Peliqan MCP server as a custom connector: `https://mcp.eu.peliqan.io/mcp`.
 
 ---
 
-## 5. Repository layout
+## 6. Repository layout
 
 ```
+.claude-plugin/                      # plugin manifest: one install for everything
+.mcp.json                            # bundles the Peliqan MCP server
 skills/
+├── peliqan-help/SKILL.md            # quick reference
+├── peliqan-sync-audit/SKILL.md      # audit: scorecard against the framework rules
+├── peliqan-sync-support/SKILL.md    # support: symptom → root cause → fix
 └── peliqan-sync/
     ├── SKILL.md                     # entry point: when and how Claude uses the skill
     ├── references/

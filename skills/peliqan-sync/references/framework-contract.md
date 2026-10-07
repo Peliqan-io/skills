@@ -190,8 +190,7 @@ poison handling · `replay_source` from stored snapshots · run log + monitor vi
 
 ## 10. Known limitations / open items
 
-- **Single-variant assumption** (`variants[0]`) — multi-variant matcher is next
-  (see the `[SCRATCH] inspect multivariant mapping` app).
+- **Single-variant assumption** (`variants[0]`) — a multi-variant matcher is planned.
 - **Delete semantics** (unlink vs archive) are still a per-sync decision; the
   detection primitive (`reconcile_deletes`) now exists, the handler does not.
 - **Ingest-layer dedupe** (duplicate webhook events landing in the DWH) is

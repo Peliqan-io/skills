@@ -1,7 +1,7 @@
 # System reference: Shopify
 
 Answers the standard system checklist (`_checklist.md`) for Shopify, plus
-transport quirks verified live on account 3024 (`Shopify V2` connection,
+transport quirks verified live (`Shopify V2` connection,
 GraphQL Admin API). The framework contract stays system-agnostic; everything
 Shopify-specific belongs here.
 

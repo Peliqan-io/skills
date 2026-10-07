@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "peliqan",
+  "description": "Peliqan skills for Claude.",
+  "owner": {
+    "name": "Peliqan",
+    "url": "https://peliqan.io"
+  },
+  "plugins": [
+    {
+      "name": "peliqan",
+      "description": "Build, audit and support Peliqan sync workers.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
