@@ -5,11 +5,12 @@ is a single data-app built by the `peliqan-sync` skill: one file per system
 pair, all syncs driven from `process_all()`, on a shared framework (link table +
 bookmarks + hash idempotency + error containment).
 
-The yardstick is the framework contract. Read
-`../../peliqan-sync/references/framework-contract.md` and the `SKILL.md` of
-`peliqan-sync` (its "Production learnings" and "Keep the scaffold lean"
-sections supersede the contract where they differ) before scoring anything,
-plus `../../peliqan-sync/references/systems/<system>.md` for both systems of the
+The yardstick is the framework contract. Before scoring anything, read
+`../../peliqan-sync/references/framework-contract.md` (implemented by
+`../../peliqan-sync/assets/worker_template.py`), the "Keep the scaffold lean"
+section of `../../peliqan-sync/references/worker-build.md`, the "Sync rules" of
+`../../peliqan-sync/references/sync-build.md`, and
+`../../peliqan-sync/references/systems/<system>.md` for both systems of the
 pair.
 
 Audit vs. support: support starts from a symptom ("orders don't arrive") and
@@ -20,9 +21,9 @@ to `peliqan-support`.
 ## Ground rules
 
 - **Read-only, no exceptions.** List, read and query only. Never
-  `run_data_app`, `update_data_app`, `set_bookmark`, `replay_source`,
-  `reconcile_deletes`, or any write to the warehouse, source or target. A run
-  is a write.
+  `run_data_app`, `update_data_app`, `set_bookmark`, `replay_source`, a delete
+  reconciliation, or any write to the warehouse, source or target. A run is a
+  write.
 - **Local offline checks are fine.** Saving the worker's script locally and
   running `py_compile` and `../../peliqan-sync/scripts/test_bookmarks.py` on it
   touches nothing in the account.
@@ -40,13 +41,15 @@ to `peliqan-support`.
 worker in scope. Save `raw_script` locally. Record per worker: `PAIR`,
 `FRAMEWORK_VERSION`, `WORKER_VERSION` + the changelog block, the
 `SYNC_REGISTRY` entries in order, and `SYNCS_ENABLED`, `TEST_LIMIT`,
-`MAX_ATTEMPTS`, `MULTI_STORE`.
+`MAX_ATTEMPTS`. A pre-v5 worker may also have `MULTI_STORE`; if it is `True`,
+check that every `find_*` and `insert_link_row` passes `store_id`/`company_id`
+(**fail** if not: duplicates).
 
 ## Step 2 — Code against the contract
 
 | # | Check | Pass when | Severity if not |
 |---|---|---|---|
-| C1 | Framework version | `FRAMEWORK_VERSION` equals the template's (`"4"`) | **fail** below 4 (strict `>` loses records), else warn |
+| C1 | Framework version | `FRAMEWORK_VERSION` equals the template's (`"5"`) | **fail** below 4 (strict `>` loses records), else warn |
 | C2 | Incremental filters | Self-written filters use `>=`; connector `list(bookmark=)` gets `bookmark_with_overlap` | **fail** |
 | C3 | Bookmark advance | `advance_bookmark` only over the contiguous processed prefix; orphan-freeze on a parent dependency | **fail** |
 | C4 | Schema bootstrap | `ensure_schema` does DDL → `pq.refresh_schema` → fetch-probe → raises; `process_all` runs no syncs on failure; link table never created with `dbconn.write()` | **fail** |
@@ -57,7 +60,7 @@ worker in scope. Save `raw_script` locally. Record per worker: `PAIR`,
 | C9 | Link id guard | Monotonic `_next_link_id`, not bare `time.time_ns()` | **fail** |
 | C10 | Registry order | Parents before children; Shopify→Odoo before Odoo→Shopify | **fail** if a child can run before its parent |
 | C11 | Link cache | `prefetch_links` per page with write-through in `insert_link_row` | warn (slow) / **fail** if a child reads a stale cache |
-| C12 | Multi-store scoping | Under `MULTI_STORE = True`, every `find_*` and `insert_link_row` passes `store_id`/`company_id` | **fail** (duplicates) |
+| C12 | Loud source reads | `is_ok` rejects `detail.error` and `detail.errors`; every drain raises on a response that is not ok, and no page cap returns a partial, unsorted set | **fail** (a broken read looks like "0 records" with a green run, or the bookmark skips unread records) |
 | C13 | Run summary | Every run-summary tuple has the same arity, including the disabled-sync branch | **fail** (crashed a live run) |
 | C14 | Bookmark test | `python ../../peliqan-sync/scripts/test_bookmarks.py <worker.py>` passes; the four pure helpers are present | **fail** |
 | C15 | Compiles | `py_compile` clean | **fail** |
