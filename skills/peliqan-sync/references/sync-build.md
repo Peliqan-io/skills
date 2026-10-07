@@ -56,8 +56,8 @@ re-drive when it was missed.
 - **Extending a hash re-drives every linked record once.** Say so up front and
   state the procedure: reset the bookmark, force the stored hash, run, verify
   the counts.
-- **Prefetch per page, not per run**, and prefetch the parent syncs' links the
-  loop resolves, not only its own.
+- **Prefetch per page or per drained list, never per record**, and prefetch the
+  parent syncs' links the loop resolves, not only its own.
 
 ## The three examples are a pattern, not a menu
 
@@ -123,7 +123,7 @@ branching), that belongs in the worker + a contract bump — not hidden in a syn
      DLQ/`dead` promotion is automatic inside `insert_link_row`: don't
      hand-roll retry counting.
    - `process_<sync>` → the loop (contract §5): a `>=` drain, correct
-     `ts_field`/epoch, `prefetch_links` per page, orphan-freeze if there's a
+     `ts_field`/epoch, `prefetch_links` per page or list, orphan-freeze if there's a
      parent dep, and **return `{"processed","errors","skipped"}`**.
 4. Add a `SYNC_* = "..."` constant near the other sync constants.
 5. Insert the trio at the SYNC INSERTION POINT (before `SYNC_REGISTRY`).
@@ -156,7 +156,7 @@ branching), that belongs in the worker + a contract bump — not hidden in a syn
   compared against another source's bookmark; drain filter is `>=` (or
   `bookmark_with_overlap` on an opaque comparator) per contract §6. Run
   `python scripts/test_bookmarks.py <worker.py>` before delivering.
-- `prefetch_links` per page for this sync and every parent it resolves; skips
+- `prefetch_links` per page or list for this sync and every parent it resolves; skips
   go through `note_skip`, not a log line per record.
 - Every rule in "Sync rules" above answered for each mapping row.
 - Registered in `SYNC_REGISTRY` in the right dependency position, with a `replay`

@@ -6,7 +6,8 @@
 # Conventions shown here:
 #   - hash via stable_hash({owned fields}), NOT ad-hoc str concatenation
 #   - read with a >= drain (shopify_drain / odoo_search_read_incremental)
-#   - prefetch_links per page, for this sync AND the parent syncs it resolves
+#   - prefetch_links per page (Odoo) or per drained list (Shopify), for this
+#     sync AND the parent syncs it resolves
 #   - note_skip() instead of a log line per skipped record
 #   - process_<sync> RETURNS {"processed","errors","skipped"} for the run log
 #   - registered in SYNC_REGISTRY with an optional "replay" handler
@@ -18,7 +19,6 @@
 #   SYNC_TEMPLATES   = "shopify_products_to_odoo_product_templates"
 #   SYNC_VARIANTS    = "shopify_variants_to_odoo_product_products"
 #   SYNC_VARIANT_OPS = "odoo_product_products_to_shopify_variants"
-PREFETCH_CHUNK = 500
 
 
 # ============================================================
@@ -91,15 +91,14 @@ def process_shopify_products_to_odoo_product_templates():
     products = sort_by_updated_at(shopify_drain(CHANGED_PRODUCTS_QUERY, "products", bookmark))
     st.write(f"Source records: {len(products)} (max {TEST_LIMIT if TEST_LIMIT else 'all'})")
 
+    # ponytail: prefetches the whole drained list; slice it if TEST_LIMIT runs on huge catalogues get slow
+    prefetch_links(sync_name, "shopify", [gid_to_numeric(p.get("id")) for p in products])
     c = {"processed": 0, "errors": 0, "skipped": 0}
     high_water = bookmark
-    for i, p in enumerate(products):
+    for p in products:
         if _limit_reached(c["processed"]):
             st.info("TEST_LIMIT reached")
             break
-        if i % PREFETCH_CHUNK == 0:
-            prefetch_links(sync_name, "shopify",
-                           [gid_to_numeric(x.get("id")) for x in products[i:i + PREFETCH_CHUNK]])
         try:
             outcome = process_shopify_product_to_odoo_product_template(sync_name, p)
         except Exception as e:
@@ -227,17 +226,14 @@ def process_shopify_variants_to_odoo_product_products():
     variants = sort_by_updated_at(shopify_drain(CHANGED_VARIANTS_QUERY, "productVariants", bookmark))
     st.write(f"Changed variants: {len(variants)} (max {TEST_LIMIT if TEST_LIMIT else 'all'})")
 
+    prefetch_links(sync_name, "shopify", [gid_to_numeric(v.get("id")) for v in variants])
+    prefetch_links(SYNC_TEMPLATES, "shopify", [gid_to_numeric((v.get("product") or {}).get("id")) for v in variants])
     c = {"processed": 0, "errors": 0, "skipped": 0}
     high_water, frozen, orphans = bookmark, False, 0
-    for i, v in enumerate(variants):
+    for v in variants:
         if _limit_reached(c["processed"]):
             st.info("TEST_LIMIT reached")
             break
-        if i % PREFETCH_CHUNK == 0:
-            page = variants[i:i + PREFETCH_CHUNK]
-            prefetch_links(sync_name, "shopify", [gid_to_numeric(x.get("id")) for x in page])
-            prefetch_links(SYNC_TEMPLATES, "shopify",
-                           [gid_to_numeric((x.get("product") or {}).get("id")) for x in page])
         parent_odoo_id = _resolve_parent_odoo_id(v)
         if not parent_odoo_id:
             # orphan: freeze bookmark; linking the parent later won't bump updatedAt

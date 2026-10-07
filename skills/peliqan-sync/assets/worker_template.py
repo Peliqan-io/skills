@@ -615,16 +615,6 @@ def odoo_object_search(model, domain, fields):
     return result or []
 
 
-def _odoo_error(resp):
-    """`detail.error.data` name + message of an Odoo fault, else the raw response."""
-    detail = resp.get("detail") if isinstance(resp, dict) else None
-    err = detail.get("error") if isinstance(detail, dict) else None
-    data = err.get("data") if isinstance(err, dict) else None
-    if isinstance(data, dict):
-        return f"{data.get('name', '')}: {data.get('message', '')}"
-    return _err(resp, 1000)
-
-
 def odoo_search_read_incremental(model, fields, bookmark, page_size=100):
     """Drain an Odoo model via search_read: write_date >= bookmark, oldest-first,
     offset-paged until empty. Odoo write_date is 'YYYY-MM-DD HH:MM:SS'; keep its
@@ -638,10 +628,8 @@ def odoo_search_read_incremental(model, fields, bookmark, page_size=100):
                                 additional_params={"limit": page_size, "offset": page * page_size,
                                                    "order": "write_date asc", "fields": fields})
         if not is_ok(resp):
-            raise RuntimeError(f"source_error: Odoo search_read({model}) page {page}: {_odoo_error(resp)}")
+            raise RuntimeError(f"source_error: Odoo search_read({model}) page {page}: {_err(resp, 1000)}")
         rows = (resp.get("detail") or {}).get("result") or []
-        if isinstance(rows, dict):
-            rows = [rows]
         if not rows:
             return
         yield rows
@@ -662,10 +650,9 @@ def find_or_create(model, domain, record, cache, key, strict=False):
         resp = odoo_api.apicall("", odoo_model=model, odoo_method="search_read", payload=[domain],
                                 additional_params={"fields": ["id"], "limit": 1})
         if not is_ok(resp):
-            problem = f"search failed: {_odoo_error(resp)}"
+            problem = f"search failed: {_err(resp, 1000)}"
         else:
             rows = (resp.get("detail") or {}).get("result") or []
-            rows = [rows] if isinstance(rows, dict) else rows
             if rows:
                 found = rows[0].get("id")
             else:
@@ -673,7 +660,7 @@ def find_or_create(model, domain, record, cache, key, strict=False):
                 if is_ok(created):
                     found = extract_new_id(created)
                 else:
-                    problem = f"create failed: {_odoo_error(created)}"
+                    problem = f"create failed: {_err(created, 1000)}"
     except Exception as e:
         problem = f"{e}"
     if found is None:

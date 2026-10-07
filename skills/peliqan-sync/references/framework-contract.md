@@ -120,8 +120,8 @@ Link table:
 - `find_link_by_odoo(sync_name, odoo_id) -> (shopify_id, odoo_source_hash)`
 - `prefetch_links(sync_name, side, keys, chunk=500)`, `side` = `"shopify"` or
   `"odoo"`: loads the latest `ok` link for these keys in one query per chunk.
-  Call it **once per page** of source records, for this sync **and** for every
-  parent sync the loop resolves. Misses are cached as `(None, None)`; a failed
+  Call it once per page (a paged drain) or once per drained list, for this
+  sync **and** for every parent sync the loop resolves. Misses are cached as `(None, None)`; a failed
   query caches nothing, so `find_*` falls back to per-key lookups. *(Without
   it, one live run did 280+ queries for zero writes.)*
 
@@ -164,7 +164,7 @@ count. Log a line only for records that are written or fail, never for skips.
 - `bookmark = get_bookmark(sync_name) or <epoch in this source's format>`.
 - Read the changed set with a `>=` drain, `sort_by_updated_at(..., ts_field=<source field>)`
   when the drain does not already return time order.
-- `prefetch_links` per page (this sync and its parents).
+- `prefetch_links` per page or per drained list (this sync and its parents).
 - Loop with `_limit_reached`; per-record try/except that records a row and continues; `advance_bookmark` only over reached records; orphan-freeze on a parent dep.
 - **Return `{"processed": n, "errors": e, "skipped": s}`** so `process_all` logs the run.
 - Register in `SYNC_REGISTRY`: `{"name": SYNC_X, "run": process_x, "replay": <optional>}`, in dependency order (parents first, Shopify→Odoo before Odoo→Shopify).
