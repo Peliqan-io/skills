@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="1000" height="600" font-family="DejaVu Sans, Verdana, Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#E07B39"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="999" height="599" rx="10" fill="#FFFFFF" stroke="#E3E3E3"/>
+
+  <!-- Syncs -->
+  <text x="130" y="38" fill="#2F3B4C" font-size="12px" font-weight="bold" text-anchor="middle">SYNCS</text>
+  <text x="130" y="53" fill="#666" font-size="10px" text-anchor="middle">example · which ones run is configurable</text>
+
+  <rect x="30" y="68" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="87" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">1 products</text><text x="130" y="111" fill="#666" font-size="10px" text-anchor="middle">Shopify → Odoo</text>
+  <rect x="30" y="122" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="141" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">2 customers</text><text x="130" y="165" fill="#666" font-size="10px" text-anchor="middle">Shopify → Odoo</text>
+  <rect x="30" y="176" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="195" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">3 orders</text><text x="130" y="219" fill="#666" font-size="10px" text-anchor="middle">Shopify → Odoo</text>
+  <rect x="30" y="230" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="249" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">4 stock</text><text x="130" y="273" fill="#666" font-size="10px" text-anchor="middle">Odoo → Shopify</text>
+  <rect x="30" y="284" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="303" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">5 fulfilments</text><text x="130" y="327" fill="#666" font-size="10px" text-anchor="middle">Odoo → Shopify</text>
+
+  <path d="M230,83 H246 M230,137 H246 M230,191 H246 M230,245 H246 M230,299 H246 M246,83 V299" stroke="#5B6B80" stroke-width="1.5" fill="none"/>
+  <path d="M246,191 H266" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <text x="130" y="356" fill="#2F3B4C" font-weight="bold" text-anchor="middle" font-size="11">One run = every enabled sync,</text>
+  <text x="130" y="371" fill="#666" font-size="10px" text-anchor="middle">in registry order (parents first)</text>
+
+  <!-- Worker -->
+  <text x="272" y="52" fill="#E07B39" font-size="12px" font-weight="bold">THE WORKER: one data app per system pair</text>
+  <rect x="272" y="62" width="520" height="340" rx="10" fill="#FFFFFF" stroke="#E07B39" stroke-width="2"/>
+
+  <rect x="290" y="88" width="108" height="66" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="344" y="110" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">1 Source</text><text x="344" y="126" fill="#666" font-size="10px" text-anchor="middle">changed since</text><text x="344" y="139" fill="#666" font-size="10px" text-anchor="middle">bookmark · validate</text>
+
+  <rect x="414" y="88" width="108" height="66" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="468" y="110" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">2 Lookup</text><text x="468" y="126" fill="#666" font-size="10px" text-anchor="middle">link row:</text><text x="468" y="139" fill="#666" font-size="10px" text-anchor="middle">create or update?</text>
+
+  <rect x="538" y="88" width="108" height="66" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="592" y="110" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">3 Map + hash</text><text x="592" y="126" fill="#666" font-size="10px" text-anchor="middle">owned fields</text><text x="592" y="139" fill="#666" font-size="10px" text-anchor="middle">same hash → skip</text>
+
+  <rect x="662" y="88" width="108" height="66" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="716" y="110" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">4 Writeback</text><text x="716" y="126" fill="#666" font-size="10px" text-anchor="middle">insert or</text><text x="716" y="139" fill="#666" font-size="10px" text-anchor="middle">update</text>
+
+  <path d="M398,121 H410" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M522,121 H534" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M646,121 H658" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <rect x="662" y="190" width="108" height="66" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="716" y="212" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">5 Response</text><text x="716" y="228" fill="#666" font-size="10px" text-anchor="middle">status + errors</text><text x="716" y="241" fill="#666" font-size="10px" text-anchor="middle">hidden in a 200</text>
+  <path d="M716,154 V186" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <rect x="500" y="190" width="146" height="66" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="573" y="212" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">6 Append link row</text><text x="573" y="228" fill="#666" font-size="10px" text-anchor="middle">status ok</text><text x="573" y="241" fill="#666" font-size="10px" text-anchor="middle">+ hash</text>
+  <path d="M662,223 H650" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="656" y="183" fill="#666" text-anchor="middle" font-size="9">ok</text>
+
+  <!-- Error layer -->
+  <rect x="330" y="296" width="290" height="58" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="475" y="318" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">Error: source_error / target_error</text>
+  <text x="475" y="335" fill="#D0652A" font-size="10px" text-anchor="middle">recorded in the link table with error_detail</text>
+  <text x="475" y="348" fill="#666" font-size="10px" text-anchor="middle">dead after MAX_ATTEMPTS → dead-letter view</text>
+
+  <path d="M344,154 V292" stroke="#E07B39" stroke-width="1.5" fill="none" marker-end="url(#ao)"/>
+  <text x="352" y="230" fill="#D0652A" font-size="10px" text-anchor="start">invalid</text>
+
+  <path d="M716,256 V276 H560 V292" stroke="#E07B39" stroke-width="1.5" fill="none" marker-end="url(#ao)"/>
+  <text x="640" y="271" fill="#D0652A" font-size="10px" text-anchor="start">rejected</text>
+
+  <path d="M330,325 H284 V108 H286" stroke="#E07B39" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ao)"/>
+  <text x="289" y="280" fill="#D0652A" font-size="10px" text-anchor="start">retry</text>
+  <text x="289" y="292" fill="#D0652A" font-size="10px" text-anchor="start">next run</text>
+
+  <rect x="650" y="296" width="120" height="58" rx="6" fill="#FAFAFA" stroke="#BDBDBD" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="710" y="318" fill="#333" font-weight="bold" text-anchor="middle" font-size="11">Bookmark</text>
+  <text x="710" y="333" fill="#666" font-size="10px" text-anchor="middle">moves past processed</text>
+  <text x="710" y="346" fill="#666" font-size="10px" text-anchor="middle">records only (&gt;=)</text>
+
+  <!-- Target -->
+  <rect x="812" y="88" width="168" height="66" rx="6" fill="#EEF0F3" stroke="#C5CAD1" stroke-width="1.5"/>
+  <text x="896" y="114" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">Target system</text>
+  <text x="896" y="132" fill="#666" font-size="10px" text-anchor="middle">e.g. Odoo or Shopify API</text>
+  <path d="M770,121 H808" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <!-- Link table -->
+  <path d="M640,406 V448" stroke="#333" stroke-width="1.5" marker-start="url(#ah)" marker-end="url(#ah)"/>
+  <text x="650" y="430" fill="#555" font-size="10px">reads (step 2) · writes (step 6 and errors)</text>
+  <text x="272" y="444" fill="#2F3B4C" font-size="12px" font-weight="bold">LINK TABLE: link_tables.link_&lt;pair&gt;</text>
+  <rect x="272" y="452" width="708" height="30" fill="#FFFFFF" stroke="#333" stroke-width="1.2"/>
+  <path d="M360.5,452 V482 M449,452 V482 M537.5,452 V482 M626,452 V482 M714.5,452 V482 M803,452 V482 M891.5,452 V482" stroke="#333" stroke-width="1"/>
+  <text x="316" y="471" fill="#333" font-size="10px" text-anchor="middle">sync_name</text>
+  <text x="405" y="471" fill="#333" font-size="10px" text-anchor="middle">shopify_id</text>
+  <text x="493" y="471" fill="#333" font-size="10px" text-anchor="middle">odoo_id</text>
+  <text x="582" y="471" fill="#333" font-size="10px" text-anchor="middle">hash (×2)</text>
+  <text x="670" y="471" fill="#333" font-size="10px" text-anchor="middle">source_json (×2)</text>
+  <text x="759" y="471" fill="#333" font-size="10px" text-anchor="middle">action</text>
+  <text x="847" y="471" fill="#333" font-size="10px" text-anchor="middle">status</text>
+  <text x="936" y="471" fill="#333" font-size="10px" text-anchor="middle">attempt</text>
+  <text x="626" y="502" fill="#666" font-size="10px" text-anchor="middle">plus error_detail · timestamp · append-only · one table per worker, shared by all its syncs</text>
+  <text x="626" y="517" fill="#666" font-size="10px" text-anchor="middle">one hash per direction prevents two-way loops · latest ok row per record = the effective link</text>
+
+  <!-- Legend -->
+  <path d="M30,546 H970" stroke="#E3E3E3"/>
+  <rect x="30" y="566" width="12" height="12" rx="2" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="50" y="576" fill="#555" font-size="10px">sync configuration</text>
+  <rect x="200" y="566" width="12" height="12" rx="2" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/><text x="220" y="576" fill="#555" font-size="10px">worker step</text>
+  <path d="M340,572 H372" stroke="#E07B39" stroke-width="1.5" stroke-dasharray="5 4"/><text x="380" y="576" fill="#555" font-size="10px">error / retry path</text>
+  <rect x="520" y="566" width="12" height="12" rx="2" fill="#FAFAFA" stroke="#BDBDBD" stroke-width="1.2" stroke-dasharray="4 3"/><text x="540" y="576" fill="#555" font-size="10px">framework rule</text>
+  <rect x="670" y="566" width="12" height="12" rx="2" fill="#FFFFFF" stroke="#333"/><text x="690" y="576" fill="#555" font-size="10px">link table (data)</text>
+  <rect x="830" y="566" width="12" height="12" rx="2" fill="#EEF0F3" stroke="#C5CAD1" stroke-width="1.5"/><text x="850" y="576" fill="#555" font-size="10px">external system</text>
+</svg>

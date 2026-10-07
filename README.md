@@ -88,18 +88,6 @@ Every worker the skill generates follows these principles:
 
 A **worker** is one Peliqan data app per system pair (for example `shopify_odoo`). It contains a shared framework and one or more **syncs**. Each sync moves one kind of object in one direction.
 
-```mermaid
-flowchart TB
-    subgraph Worker["Sync worker (one data app per system pair)"]
-        direction TB
-        F["Shared framework<br/>bookmarks · hashing · retries · logging"]
-        S1["Sync: products<br/>Shopify → Odoo"]
-        S2["Sync: orders<br/>Shopify → Odoo"]
-        S3["Sync: stock<br/>Odoo → Shopify"]
-    end
-    Worker <--> LT[("Link table + run log<br/>in your warehouse")]
-```
-
 On every run, each sync:
 
 1. **Reads only what changed** since its last bookmark.
@@ -112,27 +100,9 @@ On every run, each sync:
    6. **Logs the outcome** in the link table: `ok`, or an error status with the details.
 3. **Moves the bookmark forward**, but only past records that were actually processed.
 
-```mermaid
-flowchart TD
-    START(["Run starts"]) --> READ["Read records changed<br/>since the last bookmark"]
-    READ --> VAL{"Source record<br/>valid?"}
-    VAL -- no --> ERR["Log error in link table<br/>retry on next run"]
-    VAL -- yes --> LOOK["Look up in link table:<br/>create or update?"]
-    LOOK --> MAP["Map fields +<br/>compute fingerprint"]
-    MAP --> CHG{"Changed since<br/>last sync?"}
-    CHG -- no --> SKIP["Skip:<br/>nothing to write"]
-    CHG -- yes --> WRITE["Write to<br/>target system"]
-    WRITE --> OK{"Target accepted<br/>the write?"}
-    OK -- yes --> LOGOK["Log ok + fingerprint<br/>in link table"]
-    OK -- no --> ERR
-    ERR --> DEAD{"Too many<br/>attempts?"}
-    DEAD -- yes --> DLQ["Mark dead:<br/>shows in dead-letter view"]
-    SKIP --> NEXT
-    LOGOK --> NEXT
-    DEAD -- no --> NEXT
-    DLQ --> NEXT["Next record"]
-    NEXT --> BM(["End of run:<br/>move bookmark forward"])
-```
+<p align="center">
+  <img src="docs/images/sync-run.svg" width="900" alt="One run of a sync worker: the enabled syncs run in registry order; each record goes through source, lookup, map and hash, writeback, response and link row; failures are recorded in the link table as source_error or target_error and retried on the next run; the link table holds sync_name, both ids, a hash per direction, the source JSON, action, status and attempt.">
+</p>
 
 Records that fail are retried on the next runs. After a set number of attempts they're marked `dead` and show up in the dead-letter view for someone to look at.
 
