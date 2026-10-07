@@ -41,15 +41,7 @@ Peliqan Skills teach Claude how to work on your [Peliqan](https://peliqan.io) ac
 
 One plugin gives you every skill and the Peliqan MCP server. The first time a skill uses the MCP, you sign in with your Peliqan account.
 
-<details>
-<summary>Without the plugin</summary>
-
-Install every skill: audit and support read the rules inside the build skills.
-
-- **Claude Code:** `git clone https://github.com/Peliqan-io/skills.git`, copy `skills/*` to `~/.claude/skills/`, then `claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp`.
-- **Claude app:** zip each folder under `skills/` separately, upload the zips under **Settings → Capabilities → Skills**, and add `https://mcp.eu.peliqan.io/mcp` as a custom connector.
-
-</details>
+No plugins, the MCP server by hand, or checking that it works: see [INSTALL.md](INSTALL.md).
 
 ## Frameworks <img src="https://img.shields.io/badge/beta-ED7D2B?style=flat&labelColor=383838" alt="Beta">
 
@@ -85,6 +77,7 @@ Every framework follows the same lifecycle. Each framework has its own build ski
 ## Repository layout
 
 ```
+INSTALL.md                   # other install setups
 .claude-plugin/              # plugin manifest: one install for everything
 .mcp.json                    # bundles the Peliqan MCP server
 docs/
