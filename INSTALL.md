@@ -38,5 +38,5 @@ To update, upload the new zips.
 
 ## Check that it works
 
-1. Ask *"which Peliqan skills are there?"* (or run `/peliqan:peliqan-help`). Claude should list every skill.
-2. Ask *"list my Peliqan connections"*. The first time, Claude asks you to sign in with your own Peliqan account; after that you see your connections. If it can't reach the MCP server, the skills say so and stop instead of guessing.
+1. Ask *"which Peliqan skills are there?"* (or run `/peliqan:peliqan-help`). The AI should list every skill.
+2. Ask *"list my Peliqan connections"*. The first time, the AI asks you to sign in with your own Peliqan account; after that you see your connections. If it can't reach the MCP server, the skills say so and stop instead of guessing.

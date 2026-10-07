@@ -21,12 +21,12 @@
 
 <p align="center">
   <strong>Build &middot; Audit &middot; Support</strong><br>
-  <sub>The same patterns our own team uses in production, packaged as skills for Claude</sub>
+  <sub>The same patterns our own team uses in production, packaged as skills for AI agents</sub>
 </p>
 
 ---
 
-Peliqan Skills teach Claude how to work on your [Peliqan](https://peliqan.io) account the way we do. Claude talks to your account through the Peliqan MCP server: it inspects connections and tables, builds and deploys, and reads run logs. Anything that writes to your account waits for your go-ahead.
+Peliqan Skills teach AI agents how to work on your [Peliqan](https://peliqan.io) account the way we do. The AI talks to your account through the Peliqan MCP server: it inspects connections and tables, builds and deploys, and reads run logs. Anything that writes to your account waits for your go-ahead.
 
 ## Installation
 
@@ -45,7 +45,7 @@ No plugins, the MCP server by hand, or checking that it works: see [INSTALL.md](
 
 ## Frameworks <img src="https://img.shields.io/badge/beta-ED7D2B?style=flat&labelColor=383838" alt="Beta">
 
-Proven patterns for what you build on Peliqan. Claude builds, audits and supports each one with its own skills.
+Proven patterns for what you build on Peliqan. AI builds, audits and supports each one with its own skills.
 
 | Framework | What you get | Docs |
 |---|---|---|
@@ -64,7 +64,7 @@ More frameworks will be added the same way, each with its own build skill and do
 | [`peliqan-support`](skills/peliqan-support) | `/peliqan:peliqan-support` | **Support** when something is broken anywhere in your account: a sync, a pipeline, a data app, an API endpoint, a stale table. Finds the root cause and proposes a fix. Changes nothing without your go-ahead. |
 | [`peliqan-help`](skills/peliqan-help) | `/peliqan:peliqan-help` | Quick reference for all of the above. |
 
-One install gives you all of them. The commands above are the plugin form; with a manual install or on claude.ai they are `/peliqan-sync` and so on. You don't have to remember them either: describe what you want ("rebuild this Power BI report", "is our order sync ready to go live?", "the pipeline failed last night") and Claude picks the right skill.
+One install gives you all of them. The commands above are the plugin form; with a manual install or on claude.ai they are `/peliqan-sync` and so on. You don't have to remember them either: describe what you want ("rebuild this Power BI report", "is our order sync ready to go live?", "the pipeline failed last night") and the AI picks the right skill.
 
 ## How they fit together
 
