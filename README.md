@@ -104,6 +104,28 @@ On every run, each sync:
    6. **Logs the outcome** in the link table: `ok`, or an error status with the details.
 3. **Moves the bookmark forward**, but only past records that were actually processed.
 
+```mermaid
+flowchart TD
+    START(["Run starts"]) --> READ["Read records changed<br/>since the last bookmark"]
+    READ --> VAL{"Source record<br/>valid?"}
+    VAL -- no --> ERR["Log error in link table<br/>retry on next run"]
+    VAL -- yes --> LOOK["Look up in link table:<br/>create or update?"]
+    LOOK --> MAP["Map fields +<br/>compute fingerprint"]
+    MAP --> CHG{"Changed since<br/>last sync?"}
+    CHG -- no --> SKIP["Skip:<br/>nothing to write"]
+    CHG -- yes --> WRITE["Write to<br/>target system"]
+    WRITE --> OK{"Target accepted<br/>the write?"}
+    OK -- yes --> LOGOK["Log ok + fingerprint<br/>in link table"]
+    OK -- no --> ERR
+    ERR --> DEAD{"Too many<br/>attempts?"}
+    DEAD -- yes --> DLQ["Mark dead:<br/>shows in dead-letter view"]
+    SKIP --> NEXT
+    LOGOK --> NEXT
+    DEAD -- no --> NEXT
+    DLQ --> NEXT["Next record"]
+    NEXT --> BM(["End of run:<br/>move bookmark forward"])
+```
+
 Records that fail are retried on the next runs. After a set number of attempts they're marked `dead` and show up in the dead-letter view for someone to look at.
 
 Each worker creates these objects in your warehouse:
