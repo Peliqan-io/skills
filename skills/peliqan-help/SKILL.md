@@ -39,7 +39,7 @@ the right one:
 
 ## Typical lifecycle
 
-1. **Build** with the product's build skill: `peliqan-sync` for syncs,
+1. **Build** with the framework's build skill: `peliqan-sync` for syncs,
    `peliqan-dashboard` for dashboards.
 2. **Audit** it with `peliqan-audit` before go-live, and again after changes.
 3. **Support** with `peliqan-support` when something breaks. The fix goes

@@ -19,14 +19,16 @@
 
 Peliqan Skills teach Claude how to work on your [Peliqan](https://peliqan.io) account the way we do. Claude talks to your account through the Peliqan MCP server: it inspects connections and tables, builds and deploys, and reads run logs. Anything that writes to your account waits for your go-ahead.
 
-## Products
+## Peliqan Frameworks
 
-| Product | What you get | Docs |
+Proven patterns for what you build on Peliqan. Claude builds, audits and supports each one with its own skills.
+
+| Framework | What you get | Docs |
 |---|---|---|
 | **Syncs** | Keep two systems in sync (orders, stock, customers…), API to API or to and from your warehouse. One worker per system pair, no duplicates, nothing lost silently, code you own. | [docs/syncs](docs/syncs/README.md) |
 | **Dashboards** | Dashboards on your warehouse: rebuild a report from any BI tool (Power BI, Tableau, Excel…), start from scratch, or build on tables you already have. The data model scales from one view to a full Bronze/Silver/Gold architecture, and every number is verified on real records before anything is built. | [docs/dashboards](docs/dashboards/README.md) |
 
-More products will be added the same way, each with its own build skill and docs.
+More frameworks will be added the same way, each with its own build skill and docs.
 
 ## Skills
 
@@ -42,10 +44,10 @@ One install gives you all of them. You don't have to remember the commands eithe
 
 ## How they fit together
 
-Every product follows the same lifecycle. Each product has its own build skill; audit and support are shared and know every product.
+Every framework follows the same lifecycle. Each framework has its own build skill; audit and support are shared and know every framework.
 
 <p align="center">
-  <img src="docs/images/lifecycle.svg" width="900" alt="Build with the product's build skill, audit with peliqan-audit, then live. Audit sends fixes back to build; live is audited periodically or after a change; when something breaks, peliqan-support finds the root cause and the fix goes back through the build skill.">
+  <img src="docs/images/lifecycle.svg" width="900" alt="Build with the framework's build skill, audit with peliqan-audit, then live. Audit sends fixes back to build; live is audited periodically or after a change; when something breaks, peliqan-support finds the root cause and the fix goes back through the build skill.">
 </p>
 
 ## Installation
@@ -87,12 +89,12 @@ claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp
 docs/
 ├── README.md                # how the docs are organised, diagram style
 ├── images/                  # shared diagrams
-├── dashboards/              # one folder per product
+├── dashboards/              # one folder per framework
 └── syncs/
 skills/
 ├── peliqan-help/            # quick reference
-├── peliqan-audit/           # SKILL.md + references/<product>.md
-├── peliqan-support/         # SKILL.md + references/<product>.md
+├── peliqan-audit/           # SKILL.md + references/<framework>.md
+├── peliqan-support/         # SKILL.md + references/<framework>.md
 ├── peliqan-dashboard/       # build skill for dashboards: data model, formula checks, Streamlit patterns
 └── peliqan-sync/            # build skill for syncs: framework, template, system notes, tests
 ```
