@@ -1,6 +1,6 @@
 ---
 name: peliqan-sync
-description: "Builds and extends Peliqan Reverse-ETL sync workers between two business systems (verified: Shopify ⇄ Odoo; others through a system checklist), as ONE single-file data app on the Peliqan data warehouse. Use when someone wants to scaffold a worker for a system pair or add one sync (orders, stock, customers, products, fulfilment, refunds) to an existing worker: 'build a sync between our webshop and our ERP', 'add an order sync to Odoo', 'push stock from the ERP to the webshop', 'connect Shopify to Odoo', '/peliqan-sync'. Also used to apply fixes that peliqan-audit or peliqan-support route here, and to upgrade a worker's framework."
+description: "Builds and extends Peliqan Reverse-ETL sync workers between two business systems (verified: Shopify ⇄ Odoo; others through a system checklist), as ONE single-file data app on the Peliqan data warehouse. Use when someone wants to scaffold a worker for a system pair or add one sync (orders, stock, customers, products, fulfilment, refunds) to an existing worker, reading the source from its API or from its Peliqan pipeline table in the warehouse: 'build a sync between our webshop and our ERP', 'add an order sync to Odoo', 'push stock from the ERP to the webshop', 'connect Shopify to Odoo', '/peliqan-sync'. Also used to apply fixes that peliqan-audit or peliqan-support route here, and to upgrade a worker's framework."
 ---
 
 # Peliqan Sync
@@ -36,7 +36,16 @@ worker's pair (e.g. `shopify.md` + `odoo.md`). For a system with no file yet
 together with the dev. Never guess the answers; an unanswered checklist row is
 a build-time question.
 
-The framework is **versioned** (`FRAMEWORK_VERSION`, now 5). When adding a sync
+**Where a sync reads and writes.** By default a sync reads the source system's
+API and writes the target system's API. Two variations:
+- **The warehouse as the source:** when the source already lands in the
+  warehouse through a Peliqan pipeline and the dev wants to read that table,
+  use `dwh_drain` and read `references/systems/peliqan-dwh.md` together with
+  the system's own file (pipeline lag, the build-time probe).
+- **The warehouse as the target:** never for a new sync unless the dev
+  explicitly asks for it; then follow contract §7a. Don't propose it yourself.
+
+The framework is **versioned** (`FRAMEWORK_VERSION`, now 6). When adding a sync
 to a worker with an older version, upgrade its framework block in place first
 (contract §11).
 
@@ -64,10 +73,10 @@ a single pass.
 
 ## Assets & scripts
 
-- `assets/worker_template.py`: the sync-agnostic framework (v5), placeholdered
+- `assets/worker_template.py`: the sync-agnostic framework (v6), placeholdered
   for the system pair. The worker workflow starts here.
 - `assets/sync_examples/product_syncs.py`: the three product-sync trios from the
-  live worker, on framework v5:
+  live worker:
   - sync 1: SYSTEM_A → SYSTEM_B, create/update
   - sync 2: SYSTEM_A → SYSTEM_B, parent dependency + seed-once (orphan-freeze)
   - sync 3: SYSTEM_B → SYSTEM_A, GraphQL writeback, write_date drain
@@ -77,6 +86,12 @@ a single pass.
   out of the worker (`sort_by_updated_at`, `advance_bookmark`,
   `bookmark_with_overlap`, `simulate_bookmark_run`), so those four stay in every
   worker, with the template's signatures.
+- `assets/sync_examples/dwh_and_audit.py`: sync 1 reading a pipeline table
+  instead of the API, plus an `audit_<sync>` function (missing / drift /
+  orphans) for the opt-in audit (contract §12).
+- `scripts/test_dwh_and_audit.py`: fake-platform test (DuckDB as the
+  warehouse) of `dwh_drain` and the audit. Run it when either changes:
+  `python scripts/test_dwh_and_audit.py <worker.py>` (needs `duckdb`).
 
 ## Ground rules (every build)
 

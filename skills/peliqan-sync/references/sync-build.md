@@ -10,7 +10,8 @@ This maps 1:1 onto the requirements-doc sync matrix. For the sync, collect:
 | input | example | notes |
 | --- | --- | --- |
 | source system + object | Shopify `Order` | drives which read helper + timestamp |
-| target system + model(s) | Odoo `sale.order`, `sale.order.line` | |
+| source channel | the API (default), or its Peliqan pipeline table | a table → `dwh_drain` + `systems/peliqan-dwh.md`; record table, `ts_field`, pipeline interval + overlap in the sync's header comment |
+| target system + model(s) | Odoo `sale.order`, `sale.order.line` | a warehouse table only on explicit request (contract §7a) |
 | direction | Shopify → Odoo | which `find_*` to use |
 | source of truth / owned fields | Shopify owns header, taxes | **hash covers only these** |
 | field mapping | title→name, ... + transforms (e.g. `weight_to_kg`) | the body of `fieldmapping_*` |
@@ -160,7 +161,12 @@ branching), that belongs in the worker + a contract bump — not hidden in a syn
   go through `note_skip`, not a log line per record.
 - Every rule in "Sync rules" above answered for each mapping row.
 - Registered in `SYNC_REGISTRY` in the right dependency position, with a `replay`
-  handler where meaningful.
+  handler where meaningful, and an `audit` fn only if the dev asked for one
+  (`assets/sync_examples/dwh_and_audit.py`).
+- A DWH-sourced sync drains with `bookmark_with_overlap(..., seconds=<one
+  pipeline interval>)` and normalises rows to the API shape the mapping expects,
+  so switching channel re-drives nothing.
+- The target is the other system, not the warehouse, unless the dev asked.
 - No new helper invented that isn't in the contract: if you need one, it belongs
   in the framework (bump the version), not hidden in a sync.
 

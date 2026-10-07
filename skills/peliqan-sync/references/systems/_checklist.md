@@ -23,7 +23,7 @@ Copy this file to `<system>.md` and fill in every row:
 | Data-model impedance vs the other side | template-vs-variant splits, parent/child hierarchies, derived values (kit stock) |
 | Delete semantics options | archive / deactivate / hard delete / GDPR flows — per-sync decision, but list the options |
 
-Known systems: `shopify.md`, `odoo.md`. Examples of the level of detail
+Known systems: `shopify.md`, `odoo.md`. Read path: `peliqan-dwh.md` (a Peliqan pipeline table as the source, read together with that system's own file). Examples of the level of detail
 expected: both existing files record *verified live* behaviour, not
 documentation summaries — mark anything unverified as such.
 

@@ -1,5 +1,5 @@
 # ============================================================
-# SYNC EXAMPLES: the three product syncs, on framework v5
+# SYNC EXAMPLES: the three product syncs, on framework v6
 # ============================================================
 # Reference trios the sync-builder copies. Transport helpers live in the
 # worker template; these add only sync-SPECIFIC constants/helpers.

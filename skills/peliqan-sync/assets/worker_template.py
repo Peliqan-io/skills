@@ -1,10 +1,10 @@
 # ============================================================
 # SHOPIFY-ODOO DATA SYNC WORKER  ({ACCOUNT_LABEL})
-# framework version: 5   (keep FRAMEWORK_VERSION below in sync)
+# framework version: 6   (keep FRAMEWORK_VERSION below in sync)
 # ============================================================
 # CHANGELOG (bump WORKER_VERSION below with every deploy; it is the only way
 # to read back which version an account runs)
-#   1  {DATE}  scaffold: framework v5, no syncs yet
+#   1  {DATE}  scaffold: framework v6, no syncs yet
 # ============================================================
 # Default system pair: Shopify (SYSTEM A) <-> Odoo (SYSTEM B).
 # For a DIFFERENT pair, this file is a mechanical rename of the two system
@@ -42,6 +42,16 @@
 #     silently dropping link rows while writing to the target.
 #   - nothing else aborts the run: sync-, record- and link-write-level guards.
 #
+# WAREHOUSE AS SOURCE: dwh_drain() reads a Peliqan pipeline table instead of
+#   the source API (references/systems/peliqan-dwh.md). The warehouse is never
+#   a sync TARGET by default: only when explicitly asked (contract §7a).
+#
+# AUDIT (opt-in, read-only towards both systems): audit_all() checks every
+#   sync's error backlog plus the optional per-sync "audit" fn (coverage /
+#   drift / orphans) and writes findings to <LINK_SCHEMA>.audit_<pair>.
+#   Runs when state {"audit": {"requested": true}} is set, or every
+#   AUDIT_EVERY_N_RUNS runs. See peliqan-audit references/sync.md, part B.
+#
 # LINK TABLE  <LINK_SCHEMA>.link_<pair>  (per-worker, append-only, self-created)
 #   id | sync_name | action | status | attempt | shopify_id | odoo_id
 #   shopify_source_hash | odoo_source_hash
@@ -57,10 +67,13 @@ import time
 import traceback
 from datetime import datetime
 
-FRAMEWORK_VERSION = "5"
+FRAMEWORK_VERSION = "6"
 WORKER_VERSION = "1"    # bump with every deploy, plus a CHANGELOG line above
 TEST_LIMIT = 100        # None or 0 = process everything
 MAX_ATTEMPTS = 5        # after this many failures a link row is marked 'dead'
+AUDIT_EVERY_N_RUNS = 0  # 0 = audit only when state {"audit": {"requested": true}} is set
+AUDIT_LIMIT = 500       # max linked records a per-sync drift check reads from the target
+RUN_AT = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")   # groups one run's audit findings
 
 dw_name = pq.DW_NAME
 dbconn = pq.dbconnect(dw_name)
@@ -80,6 +93,7 @@ LINK_SCHEMA = "link_tables"
 PAIR = "shopify_odoo"                 # this worker's pair; part of every object name
 LINK_TABLE = f"link_{PAIR}"          # e.g. link_shopify_odoo
 RUNS_TABLE = f"runs_{PAIR}"          # e.g. runs_shopify_odoo
+AUDIT_TABLE = f"audit_{PAIR}"        # e.g. audit_shopify_odoo (audit findings only)
 _LT = f"{LINK_SCHEMA}.{LINK_TABLE}"  # convenience for queries
 # NOTE: the original hand-built worker used link_tables.link_table. To REUSE
 # that existing data instead of a fresh per-pair table, set:
@@ -129,6 +143,7 @@ def ensure_schema():
     v_odoo = f"v_link_odoo_latest_{PAIR}"
     v_dead = f"v_dead_letter_{PAIR}"
     v_runs = f"v_run_summary_{PAIR}"
+    v_audit = f"v_audit_latest_{PAIR}"
     stmts = [
         f"CREATE SCHEMA IF NOT EXISTS {LINK_SCHEMA}",
         f"""CREATE TABLE IF NOT EXISTS {_LT} (
@@ -164,6 +179,14 @@ def ensure_schema():
                   sum(errors) AS errors, sum(skipped) AS skipped
            FROM {LINK_SCHEMA}.{RUNS_TABLE}
            GROUP BY sync_name, left(started_at, 10)""",
+        # audit findings (one run_at per audit; check_name = backlog /
+        # missing / drift / orphan / audit_error)
+        f"""CREATE TABLE IF NOT EXISTS {LINK_SCHEMA}.{AUDIT_TABLE} (
+               id bigint PRIMARY KEY, run_at text, sync_name text, check_name text,
+               shopify_id text, odoo_id text, detail text )""",
+        f"""CREATE OR REPLACE VIEW {LINK_SCHEMA}.{v_audit} AS
+           SELECT * FROM {LINK_SCHEMA}.{AUDIT_TABLE}
+           WHERE run_at = (SELECT max(run_at) FROM {LINK_SCHEMA}.{AUDIT_TABLE})""",
     ]
     for stmt in stmts:
         try:
@@ -180,7 +203,7 @@ def ensure_schema():
         except Exception:
             return False
 
-    missing = [t for t in (LINK_TABLE, RUNS_TABLE) if not _registered(t)]
+    missing = [t for t in (LINK_TABLE, RUNS_TABLE, AUDIT_TABLE) if not _registered(t)]
     if missing:
         st.info("warehouse objects not registered in the Peliqan catalog yet; "
                 "running pq.refresh_schema (synchronous)")
@@ -289,6 +312,36 @@ def fetch(query):
     except Exception as e:
         st.info(f"Query failed: {e}")
         return []
+
+
+def dwh_drain(table, ts_field, bookmark, id_field="id", where="", page_size=500):
+    """Incremental drain of a warehouse table (e.g. a Peliqan pipeline table)
+    instead of the source API: ts_field >= bookmark (contract §6), oldest-first,
+    offset-paged until an empty page; `table` is schema.table, `where` an extra
+    SQL condition (no leading AND). Pages arrive in ts_field order, so
+    prefetch_links per page. PIPELINE LAG: a record lands in the table only on
+    the next pipeline run, so pass bookmark_with_overlap(bookmark, fmt=<the
+    table's format>, seconds=<one pipeline interval>); see
+    references/systems/peliqan-dwh.md. RAISES on a failed query, like the API
+    drains: a broken read never looks like "0 records"."""
+    fresh = fetch(f"SELECT max({ts_field}) AS m FROM {table}")
+    st.caption(f"{table}: max {ts_field} = {(fresh or [{}])[0].get('m')} (source freshness)")
+    extra = f" AND ({where})" if where else ""
+    page = 0
+    while True:
+        try:
+            rows = dbconn.fetch(dw_name, query=f"""
+                SELECT * FROM {table}
+                WHERE {ts_field} >= '{_sql(bookmark)}'{extra}
+                ORDER BY {ts_field} ASC, {id_field} ASC
+                LIMIT {int(page_size)} OFFSET {page * int(page_size)}
+            """) or []
+        except Exception as e:
+            raise RuntimeError(f"source_error: dwh_drain({table}) page {page}: {e}")
+        if not rows:
+            return
+        yield rows
+        page += 1
 
 
 # ------------------------------------------------------------
@@ -681,6 +734,89 @@ def extract_new_id(result):
     return detail
 
 
+# ------------------------------------------------------------
+# Audit (opt-in). Read-only towards both systems: no link rows, no bookmarks,
+# no writes to Shopify or Odoo. The only write is the findings table.
+# Per-sync checks: an optional "audit" fn in SYNC_REGISTRY; see peliqan-audit
+# references/sync.md, part B.
+# ------------------------------------------------------------
+def record_audit(sync_name, check_name, shopify_id=None, odoo_id=None, detail=None):
+    try:
+        dbconn.insert(dw_name, LINK_SCHEMA, AUDIT_TABLE, {
+            "id": _next_link_id(), "run_at": RUN_AT, "sync_name": sync_name,
+            "check_name": check_name,
+            "shopify_id": str(shopify_id) if shopify_id is not None else None,
+            "odoo_id": str(odoo_id) if odoo_id is not None else None,
+            "detail": _err(detail) or "",
+        })
+        return True
+    except Exception as e:
+        st.warning(f"record_audit ({sync_name}/{check_name}): {e}")
+        return False
+
+
+def audit_due():
+    """The audit request from state ({"audit": {"requested": true, "syncs":
+    [...]?}}) or {}. Clears the request and keeps the run counter for
+    AUDIT_EVERY_N_RUNS. One MCP state write = one audit on the next run."""
+    state = _get_state()
+    audit = dict(state.get("audit") or {})
+    runs = int(audit.get("runs_since", 0)) + 1
+    due = bool(audit.get("requested")) or bool(AUDIT_EVERY_N_RUNS and runs >= AUDIT_EVERY_N_RUNS)
+    request = {k: v for k, v in audit.items() if k not in ("requested", "runs_since")} if due else {}
+    state["audit"] = {"requested": False, "runs_since": 0 if due else runs}
+    try:
+        pq.set_state(state)
+    except Exception as e:
+        st.warning(f"audit_due: could not persist state: {e}")
+    return {"due": True, **request} if due else {}
+
+
+def audit_backlog(sync_name):
+    """Ids whose LATEST link row is not ok, counted per status (the same
+    semantics as v_dead_letter_{PAIR}, on the base table). Returns {status: n}."""
+    counts = {}
+    for side, extra in (("shopify_id", ""), ("odoo_id", " AND shopify_id IS NULL")):
+        for r in fetch(f"""
+            SELECT status, count(*) AS n FROM (
+                SELECT DISTINCT ON ({side}) status, shopify_id FROM {_LT}
+                WHERE sync_name = '{_sql(sync_name)}' AND {side} IS NOT NULL
+                ORDER BY {side}, timestamp DESC
+            ) latest WHERE status <> 'ok'{extra} GROUP BY status
+        """):
+            counts[r["status"]] = counts.get(r["status"], 0) + int(r["n"])
+    for status, n in sorted(counts.items()):
+        record_audit(sync_name, "backlog", detail=f"{status}: {n}")
+    return counts
+
+
+def audit_all(only=None):
+    """For every registered sync (or `only` these names): the backlog check
+    plus the optional per-sync "audit" fn, which records its findings via
+    record_audit and returns {check: n}. All findings of one audit share
+    RUN_AT; v_audit_latest_{PAIR} shows the last audit."""
+    st.header(f"Audit {RUN_AT} (read-only)")
+    summary = []
+    for entry in SYNC_REGISTRY:
+        name = entry["name"]
+        if only and name not in only:
+            continue
+        findings, status = {}, "ok"
+        try:
+            findings.update(audit_backlog(name))
+            if entry.get("audit"):
+                findings.update(entry["audit"]() or {})
+        except Exception as e:
+            status = f"failed: {e}"
+            record_audit(name, "audit_error", detail=traceback.format_exc())
+        summary.append((name, status, findings))
+    width = max((len(n) for n, _, _ in summary), default=0)
+    for name, status, findings in summary:
+        line = f"{name.ljust(width)}  {status}  {findings or 'clean'}"
+        (st.success if status == "ok" and not findings else st.warning)(line)
+    return summary
+
+
 # ============================================================
 # >>> SYNC INSERTION POINT <<<
 # The sync-builder appends each sync's trio here and registers it in
@@ -690,11 +826,11 @@ def extract_new_id(result):
 
 
 # ------------------------------------------------------------
-# Registry + run loop. Each entry: {"name", "run", "replay"?}.
+# Registry + run loop. Each entry: {"name", "run", "replay"?, "audit"?}.
 # Order = dependency order (parents first; Shopify->Odoo before Odoo->Shopify).
 # ------------------------------------------------------------
 SYNC_REGISTRY = [
-    # {"name": SYNC_X, "run": process_x, "replay": process_one_x},
+    # {"name": SYNC_X, "run": process_x, "replay": process_one_x, "audit": audit_x},
 ]
 
 
@@ -751,6 +887,11 @@ def process_all():
     for name in names:
         b, a = before.get(name), after.get(name)
         st.text(f"{name:<{width}}  " + (f"{b} -> {a}" if a != b else "unchanged"))
+
+    # Audit after the syncs, so it sees this run's link rows.
+    request = audit_due()
+    if request:
+        audit_all(only=request.get("syncs"))
 
 
 try:

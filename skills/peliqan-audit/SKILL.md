@@ -19,8 +19,11 @@ review, but label it a review, not an audit against a contract.
 
 ## Ground rules
 
-- **Read-only, no exceptions.** List, read and query only. Never run, deploy,
-  update, rewind, replay or write anything. A run is a write.
+- **Read-only.** List, read and query only. Never run, deploy, update,
+  rewind, replay or write to a source or target system. A run is a write. The
+  one exception: a sync worker's own reconciliation audit (`references/sync.md`,
+  part B), which you may request in the worker's state with the user's
+  go-ahead, and which writes only to the worker's findings table.
 - **Local offline checks are fine.** Saving a script locally and compiling or
   testing it touches nothing in the account.
 - **Evidence for every score.** Each pass/warn/fail cites a code line, a log

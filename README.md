@@ -34,7 +34,7 @@ Proven patterns for what you build on Peliqan. Claude builds, audits and support
 
 | Framework | What you get | Docs |
 |---|---|---|
-| **Syncs** | Keep two systems in sync (orders, stock, customers…), API to API or to and from your warehouse. One worker per system pair, no duplicates, nothing lost silently, code you own. | [docs/syncs](docs/syncs/README.md) |
+| **Syncs** | Keep two systems in sync (orders, stock, customers…), API to API, or reading from your warehouse. One worker per system pair, no duplicates, nothing lost silently, code you own. | [docs/syncs](docs/syncs/README.md) |
 | **Dashboards** | Dashboards on your warehouse: rebuild a report from any BI tool (Power BI, Tableau, Excel…), start from scratch, or build on tables you already have. The data model scales from one view to a full Bronze/Silver/Gold architecture, and every number is verified on real records before anything is built. | [docs/dashboards](docs/dashboards/README.md) |
 
 More frameworks will be added the same way, each with its own build skill and docs.

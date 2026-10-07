@@ -20,10 +20,10 @@ Keep two business systems in sync: orders, stock, customers, fulfilments, refund
 
 ## 1. What it is
 
-A **sync worker** is one Peliqan data app per system pair. It reads changed records on one side and writes them to the other, in either direction. Each side is an app's API or a table in your warehouse, so API ⇄ API, warehouse → app and app → warehouse all work. Nothing has to be loaded into the warehouse first. The warehouse only holds the worker's state.
+A **sync worker** is one Peliqan data app per system pair. It reads changed records on one side and writes them to the other, in either direction. By default it talks to both apps' APIs directly, so nothing has to be loaded into the warehouse first: the warehouse only holds the worker's state. If a Peliqan pipeline already loads the source app into the warehouse, a sync can read that table instead of calling the API. Writing *to* a warehouse table is possible too, but only when you explicitly ask for it; for loading data into the warehouse, a pipeline is usually the better tool.
 
 <p align="center">
-  <img src="images/sync-architecture.svg" width="900" alt="The sync worker runs in Peliqan, reads changes from system A and system B through their APIs or SQL via their Peliqan connections, and writes back to either side. Each side can be an app or a warehouse table. The worker's state (link table, run log, monitor views) lives in the Peliqan data warehouse.">
+  <img src="images/sync-architecture.svg" width="900" alt="The sync worker runs in Peliqan, reads changes from system A and system B through their APIs via their Peliqan connections, or from a pipeline table, and writes back to either app. The worker's state (link table, run log, monitor views) lives in the Peliqan data warehouse.">
 </p>
 
 Every worker follows these principles:
@@ -46,7 +46,7 @@ Every worker follows these principles:
 | Transactions that must be created in another system | Webshop orders → sales orders in the ERP, refunds → credit notes |
 | Master data that must stay aligned | Products, prices, customers, addresses |
 | Operational status that flows back | Stock levels from the ERP to the webshop, fulfilment and tracking info |
-| Warehouse data that must reach an app, or the other way | A cleaned customer table → the CRM; app records → a warehouse table |
+| Warehouse data that must reach an app | A cleaned customer table → the CRM |
 | Logic that a standard connector can't express | Custom field mappings, tax rules, parent/child dependencies, branching on a status |
 
 When something else is the better choice:
@@ -106,7 +106,7 @@ Each worker creates these objects in your warehouse:
 
 ### What you need
 
-- A Peliqan account with a **connection for each app** the worker talks to (or the warehouse table it reads or writes).
+- A Peliqan account with a **connection for each app** the worker talks to (or the pipeline table it reads).
 - **Claude** with the Peliqan skills installed and the Peliqan MCP connected. See [Installation](../../README.md#installation).
 
 ### Build: `peliqan-sync`
@@ -144,6 +144,10 @@ Adding a sync is real development work, typically about three functions of code,
 
 Claude reads the worker's code, configuration and recent runs, and scores them against the framework rules: safe bookmarks, duplicate protection, error handling, leftover test settings, growing error counts, duplicates in the link table. You get a verdict (**ready**, **ready with warnings**, **not ready**), a scorecard with evidence for every check and a fix list ranked by impact. The audit never changes anything.
 
+> Are there orders that never made it to the ERP?
+
+For that question the worker audits itself. After you agree, Claude asks the worker to run a **reconciliation** at the end of its next run: records missing in the target, fields that drifted from the source, and links whose source record is gone. It reads both systems but writes to neither; the findings land in an `audit_<pair>` table that Claude reads back and hands over to support.
+
 ### Support: `peliqan-support`
 
 > Orders stopped arriving in the ERP since Tuesday.
@@ -156,7 +160,7 @@ Claude finds the worker, compares the last good run with the first bad one, quer
 |---|---|
 | Shopify | Verified in production |
 | Odoo | Verified in production |
-| Peliqan warehouse tables | Supported as source or target |
+| Peliqan pipeline tables | Supported as a source, instead of the app's API. As a target only on explicit request. |
 | Other apps (Salesforce, SAP, Klaviyo, …) | Supported through a checklist. Claude works through it with you and records the answers in a new system file before building. It never guesses how an API behaves. |
 
 ### Safety rules built into the skills

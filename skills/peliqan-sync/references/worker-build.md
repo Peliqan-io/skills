@@ -1,6 +1,6 @@
 # Workflow: Build a Worker
 
-Goal: a runnable, **sync-empty** worker (framework v5) for one system pair.
+Goal: a runnable, **sync-empty** worker (framework v6) for one system pair.
 It pins down two things for life (the two systems and the warehouse objects);
 syncs are then added with `sync-build.md`.
 

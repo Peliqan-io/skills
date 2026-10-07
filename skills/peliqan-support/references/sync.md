@@ -99,11 +99,20 @@ to see whether a failure is new, retrying, or long dead.
 | Duplicates in the target | A link lookup missing from the record function; a second app (often a sandbox copy) writing with the same `PAIR`; a link row lost after a successful write; or, on a pre-v5 multi-store worker, `store_id` / `company_id` not passed | Multiple `ok` rows for one source id with different target ids; `list_data_apps` for another app with the same `PAIR`; "Could not write link row" warnings in the log | Fix the cause (own `PAIR` per sandbox, restore the lookup or the link-insert retry), then reconcile the duplicates with the developer |
 | Run suddenly slow, hundreds of queries for few writes | `prefetch_links` not called per page, or a pre-v5 framework without the link cache | Duration in the run summary vs processed count | Call `prefetch_links` per page for the sync and its parents (contract §3) |
 | A child sync treats records as orphans although the parent sync linked them in the same run | `insert_link_row` not writing `ok` rows through to the link cache (a hand-edited framework) | The registration order and `insert_link_row` against the template | Restore the template's `insert_link_row` (correctness, not speed) |
+| A warehouse-sourced sync: run green, bookmark `unchanged`, but the source system has newer records | The pipeline feeding the table stopped or lags; the drain reads nothing new | The `max(ts_field)` freshness line in the run log; `get_connection_pipeline_runs` for that pipeline | Fix the pipeline; the sync catches up on its own (no rewind needed) |
+| A warehouse-sourced sync silently misses some records that are in the table now | Pipeline lag: the record landed after the bookmark had passed its timestamp, and the overlap is shorter than one pipeline interval (or missing) | The sync's `bookmark_with_overlap(..., seconds=)` vs the pipeline schedule; the record's timestamp vs the bookmark history | Set the overlap to at least one interval (or bookmark on the table's load timestamp) via `peliqan-sync`, then rewind to before the oldest missed record |
+| Sync FAILED with `source_error: dwh_drain(...)` | The pipeline table was renamed, moved or isn't registered | The table name in the sync vs `list_tables` | Point the sync at the right table via `peliqan-sync` |
 
 If the symptom isn't in this table, work it from the contract's 6-step
 per-record path: which of validate → lookup → build → send → handle response →
 append link row did the record last reach? The link row's `status` and `action`
 answer that directly.
+
+**Coming from an audit.** Findings in `v_audit_latest_{PAIR}` (from the
+`peliqan-audit` reconciliation) arrive here as work: `missing` with a backlog
+row → fix the cause, then replay; `missing` with no link row → a bookmark rewind
+to before the record; `drift` and `orphan` → the developer decides first (who is
+right; which delete semantics), then the fix goes through `peliqan-sync`.
 
 ## Step 5 — Propose the fix, then wait
 
