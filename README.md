@@ -10,7 +10,7 @@
 <h1 align="center">Peliqan Skills</h1>
 
 <p align="center">
-  <em>Describe what you need. Claude builds it on your Peliqan account, checks it, and helps when something breaks.</em>
+  <em>Describe what you need. AI builds it on your Peliqan account, checks it, and helps when something breaks.</em>
 </p>
 
 <p align="center">
