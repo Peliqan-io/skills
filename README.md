@@ -7,7 +7,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/works%20with-Claude%20Code%20%7C%20claude.ai-111111?style=flat-square" alt="Works with Claude Code and claude.ai">
   <img src="https://img.shields.io/badge/skills-4-111111?style=flat-square" alt="4 skills">
-  <img src="https://img.shields.io/badge/verified-Shopify%20%E2%87%84%20Odoo-111111?style=flat-square" alt="Verified on Shopify and Odoo">
+  <img src="https://img.shields.io/badge/syncs-any%20system%20pair-111111?style=flat-square" alt="Syncs between any system pair">
   <img src="https://img.shields.io/badge/MCP-Peliqan-111111?style=flat-square" alt="Peliqan MCP">
 </p>
 
@@ -22,13 +22,13 @@ Skills that let Claude build on your [Peliqan](https://peliqan.io) account for y
 
 ### Before / after
 
-You want every new Shopify order to show up in Odoo as a sales order.
+You want every new webshop order to show up in your ERP as a sales order.
 
 **Without the skill:** someone writes API calls, invents their own way to remember what was already sent, finds the duplicates a week later and wonders why three orders never arrived.
 
 **With the skill:**
 
-> Add an order sync from Shopify to Odoo: sales order with order lines, customer as partner.
+> Add an order sync from the webshop to the ERP: sales order with order lines, customer as contact.
 
 Claude inspects your account, writes the sync on a proven framework, tests it offline, deploys it, runs a limited test and proves on a second run that nothing gets written twice. Every order it touches is traceable in your warehouse.
 
@@ -36,12 +36,12 @@ Claude inspects your account, writes the sync on a proven framework, tests it of
 
 | Skill | Command | What it does |
 |---|---|---|
-| [`peliqan-sync`](skills/peliqan-sync) | `/peliqan-sync` | **Build.** Sets up a sync worker between two business systems (for example Shopify ⇄ Odoo) as one Peliqan data app, or adds a sync (orders, stock, customers, fulfilment, refunds…) to a worker you already have. |
+| [`peliqan-sync`](skills/peliqan-sync) | `/peliqan-sync` | **Build.** Sets up a sync worker between two business systems (for example a webshop and an ERP) as one Peliqan data app, or adds a sync (orders, stock, customers, fulfilment, refunds…) to a worker you already have. |
 | [`peliqan-audit`](skills/peliqan-audit) | `/peliqan-audit` | **Audit.** Checks something that looks healthy against its rules and run history, before go-live or after a change. Today: sync workers. Returns a pass/warn/fail scorecard and a ranked fix list. Read-only. |
 | [`peliqan-support`](skills/peliqan-support) | `/peliqan-support` | **Support.** Something is broken anywhere in your account: a sync, a pipeline, a data app, an API endpoint, a stale table. Finds the root cause from the logs and data and proposes a fix. Changes nothing without your go-ahead. |
 | [`peliqan-help`](skills/peliqan-help) | `/peliqan-help` | Quick reference for all of the above. |
 
-One install gives you all four. You don't have to remember the commands either: describe what you want ("is our Shopify-Odoo worker ready to go live?", "orders stopped arriving in Odoo") and Claude picks the right skill.
+One install gives you all four. You don't have to remember the commands either: describe what you want ("is our order sync ready to go live?", "orders stopped arriving in the ERP") and Claude picks the right skill.
 
 More skills will be added here over time.
 
@@ -60,12 +60,12 @@ Want to know why you can trust it: requirements, risks and guards, QA? Read the 
 
 ## 1. What the skill builds
 
-The skill builds **sync workers**: Peliqan data apps that read from your data warehouse and write records into a business system, such as creating a sales order in Odoo for each new Shopify order. The warehouse sits in the middle, so the worker reads clean tables and keeps all its state next to your data:
+The skill builds **sync workers**: Peliqan data apps that read from your data warehouse and write records into a business system, such as creating a sales order in your ERP for each new webshop order. The warehouse sits in the middle, so the worker reads clean tables and keeps all its state next to your data:
 
 ```mermaid
 flowchart LR
-    A[Source system<br/>e.g. Shopify] -- "connector" --> DWH[(Peliqan<br/>data warehouse)]
-    B[Target system<br/>e.g. Odoo] -- "connector" --> DWH
+    A[System A<br/>e.g. webshop] -- "connector" --> DWH[(Peliqan<br/>data warehouse)]
+    B[System B<br/>e.g. ERP] -- "connector" --> DWH
     DWH -- "sync worker" --> B
     DWH -- "sync worker" --> A
     DWH --> R[Reporting, dashboards,<br/>APIs, AI]
@@ -86,7 +86,7 @@ Every worker the skill generates follows these principles:
 
 ## 2. How a sync worker works
 
-A **worker** is one Peliqan data app per system pair (for example `shopify_odoo`). It contains a shared framework and one or more **syncs**. Each sync moves one kind of object in one direction.
+A **worker** is one Peliqan data app per system pair (for example webshop ⇄ ERP). It contains a shared framework and one or more **syncs**. Each sync moves one kind of object in one direction.
 
 On every run, each sync:
 
@@ -123,7 +123,7 @@ The `peliqan-sync` skill teaches Claude how to build these workers the way we bu
 
 ### What you need
 
-- A Peliqan account with a **connection for both systems** (for example Shopify and Odoo), with their data loaded into the warehouse.
+- A Peliqan account with a **connection for both systems** (for example your webshop and your ERP), with their data loaded into the warehouse.
 - **Claude** (Claude Code, or claude.ai / Claude Desktop) with these skills installed (see [Installation](#5-installation)).
 - The **Peliqan MCP server** connected to Claude: `https://mcp.eu.peliqan.io/mcp`. You sign in with your own Peliqan account the first time it's used.
 
@@ -131,17 +131,17 @@ The `peliqan-sync` skill teaches Claude how to build these workers the way we bu
 
 **1. Set up a worker for a new system pair**
 
-> Build a sync worker between Shopify and Odoo.
+> Build a sync worker between our webshop and our ERP.
 
 Claude checks your account for existing workers, connections and tables, then builds an *empty* worker that contains only the framework, ready for syncs.
 
 **2. Add a sync to an existing worker**
 
-> Add an order sync from Shopify to Odoo: sales order with order lines, customer as partner.
+> Add an order sync from the webshop to the ERP: sales order with order lines, customer as contact.
 
 Claude adds that one sync to your existing worker.
 
-You can also ask for both at once ("set up the product and order sync between Shopify and Odoo"). Claude will then ask which syncs you want and how to run the first test safely. You can also call the skill explicitly with `/peliqan-sync`.
+You can also ask for both at once ("set up the product and order sync between the webshop and the ERP"). Claude will then ask which syncs you want and how to run the first test safely. You can also call the skill explicitly with `/peliqan-sync`.
 
 ### What Claude does, step by step
 
@@ -193,13 +193,13 @@ flowchart LR
 
 ### Audit: is it ready?
 
-> Audit our Shopify-Odoo worker. Can we go live?
+> Audit our order sync. Can we go live?
 
 Claude reads the worker's code, configuration and recent runs, and scores them against the framework rules: safe bookmarks, duplicate protection, error handling, leftover test settings, growing error counts, duplicates in the link table. You get a verdict (**ready**, **ready with warnings**, **not ready**), a scorecard with evidence for every check and a fix list ranked by impact. The audit never changes anything.
 
 ### Support: what broke?
 
-> Orders stopped arriving in Odoo since Tuesday.
+> Orders stopped arriving in the ERP since Tuesday.
 
 Claude finds the worker, compares the last good run with the first bad one, queries the link table for the affected records and matches the symptom to a known cause. You get the evidence, the root cause and a concrete fix. Replaying records, rewinding a bookmark or redeploying only happens after you say yes.
 

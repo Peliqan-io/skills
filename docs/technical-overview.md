@@ -10,8 +10,8 @@ How a worker and a run work is explained in the [README](../README.md#2-how-a-sy
 
 | Requirement | Why |
 |---|---|
-| **Connections with the exact names the worker uses** (for example `Shopify V2` and `Odoo`) | The worker connects at start-up. A different name crashes the app before the first sync starts. |
-| **Write access in the target system**, not just read access | Read-only access proves nothing about writes. If the worker creates custom fields in Odoo (`ir.model.fields`), that user must be allowed to. |
+| **Connections with the exact names the worker uses** (as set in the worker) | The worker connects at start-up. A different name crashes the app before the first sync starts. |
+| **Write access in the target system**, not just read access | Read-only access proves nothing about writes. If the worker creates custom fields in the target, that user must be allowed to. |
 | **Both systems' data loaded into the warehouse** | The worker reads changed records from the warehouse tables. |
 | **The Peliqan MCP connected to Claude** | So the skills can inspect the account, deploy and read run logs. |
 

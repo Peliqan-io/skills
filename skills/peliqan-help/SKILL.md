@@ -24,11 +24,11 @@ the right one:
 
 | You say | Skill |
 |---|---|
-| "Build a sync between Shopify and Odoo" | peliqan-sync |
-| "Add a stock sync from Odoo to Shopify" | peliqan-sync |
-| "Is our Shopify-Odoo worker ready to go live?" | peliqan-audit |
+| "Build a sync between our webshop and our ERP" | peliqan-sync |
+| "Add a stock sync from the ERP to the webshop" | peliqan-sync |
+| "Is our order sync ready to go live?" | peliqan-audit |
 | "Run a health check on our syncs" | peliqan-audit |
-| "Orders stopped arriving in Odoo since Tuesday" | peliqan-support |
+| "Orders stopped arriving in the ERP since Tuesday" | peliqan-support |
 | "Why are there dead-letter rows?" | peliqan-support |
 | "The pipeline failed last night" | peliqan-support |
 

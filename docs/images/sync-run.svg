@@ -14,17 +14,17 @@
   <text x="130" y="38" fill="#2F3B4C" font-size="12px" font-weight="bold" text-anchor="middle">SYNCS</text>
   <text x="130" y="53" fill="#666" font-size="10px" text-anchor="middle">example · which ones run is configurable</text>
 
-  <rect x="30" y="68" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="87" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">1 products</text><text x="130" y="111" fill="#666" font-size="10px" text-anchor="middle">Shopify → Odoo</text>
-  <rect x="30" y="122" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="141" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">2 customers</text><text x="130" y="165" fill="#666" font-size="10px" text-anchor="middle">Shopify → Odoo</text>
-  <rect x="30" y="176" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="195" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">3 orders</text><text x="130" y="219" fill="#666" font-size="10px" text-anchor="middle">Shopify → Odoo</text>
-  <rect x="30" y="230" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="249" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">4 stock</text><text x="130" y="273" fill="#666" font-size="10px" text-anchor="middle">Odoo → Shopify</text>
-  <rect x="30" y="284" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="303" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">5 fulfilments</text><text x="130" y="327" fill="#666" font-size="10px" text-anchor="middle">Odoo → Shopify</text>
+  <rect x="30" y="68" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="87" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">1 products</text><text x="130" y="111" fill="#666" font-size="10px" text-anchor="middle">A → B</text>
+  <rect x="30" y="122" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="141" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">2 customers</text><text x="130" y="165" fill="#666" font-size="10px" text-anchor="middle">A → B</text>
+  <rect x="30" y="176" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="195" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">3 orders</text><text x="130" y="219" fill="#666" font-size="10px" text-anchor="middle">A → B</text>
+  <rect x="30" y="230" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="249" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">4 stock</text><text x="130" y="273" fill="#666" font-size="10px" text-anchor="middle">B → A</text>
+  <rect x="30" y="284" width="200" height="30" rx="5" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/><text x="130" y="303" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">5 fulfilments</text><text x="130" y="327" fill="#666" font-size="10px" text-anchor="middle">B → A</text>
 
   <path d="M230,83 H246 M230,137 H246 M230,191 H246 M230,245 H246 M230,299 H246 M246,83 V299" stroke="#5B6B80" stroke-width="1.5" fill="none"/>
   <path d="M246,191 H266" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
 
   <text x="130" y="356" fill="#2F3B4C" font-weight="bold" text-anchor="middle" font-size="11">One run = every enabled sync,</text>
-  <text x="130" y="371" fill="#666" font-size="10px" text-anchor="middle">in registry order (parents first)</text>
+  <text x="130" y="371" fill="#666" font-size="10px" text-anchor="middle">in registry order · A, B = the pair</text>
 
   <!-- Worker -->
   <text x="272" y="52" fill="#E07B39" font-size="12px" font-weight="bold">THE WORKER: one data app per system pair</text>
@@ -79,7 +79,7 @@
   <!-- Target -->
   <rect x="812" y="88" width="168" height="66" rx="6" fill="#EEF0F3" stroke="#C5CAD1" stroke-width="1.5"/>
   <text x="896" y="114" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">Target system</text>
-  <text x="896" y="132" fill="#666" font-size="10px" text-anchor="middle">e.g. Odoo or Shopify API</text>
+  <text x="896" y="132" fill="#666" font-size="10px" text-anchor="middle">system A or B, via its API</text>
   <path d="M770,121 H808" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
 
   <!-- Link table -->
@@ -89,8 +89,8 @@
   <rect x="272" y="452" width="708" height="30" fill="#FFFFFF" stroke="#333" stroke-width="1.2"/>
   <path d="M360.5,452 V482 M449,452 V482 M537.5,452 V482 M626,452 V482 M714.5,452 V482 M803,452 V482 M891.5,452 V482" stroke="#333" stroke-width="1"/>
   <text x="316" y="471" fill="#333" font-size="10px" text-anchor="middle">sync_name</text>
-  <text x="405" y="471" fill="#333" font-size="10px" text-anchor="middle">shopify_id</text>
-  <text x="493" y="471" fill="#333" font-size="10px" text-anchor="middle">odoo_id</text>
+  <text x="405" y="471" fill="#333" font-size="10px" text-anchor="middle">&lt;a&gt;_id</text>
+  <text x="493" y="471" fill="#333" font-size="10px" text-anchor="middle">&lt;b&gt;_id</text>
   <text x="582" y="471" fill="#333" font-size="10px" text-anchor="middle">hash (×2)</text>
   <text x="670" y="471" fill="#333" font-size="10px" text-anchor="middle">source_json (×2)</text>
   <text x="759" y="471" fill="#333" font-size="10px" text-anchor="middle">action</text>
