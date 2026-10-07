@@ -19,7 +19,7 @@
 
 Peliqan Skills teach Claude how to work on your [Peliqan](https://peliqan.io) account the way we do. Claude talks to your account through the Peliqan MCP server: it inspects connections and tables, builds and deploys, and reads run logs. Anything that writes to your account waits for your go-ahead.
 
-## Peliqan Frameworks
+## Frameworks <img src="https://img.shields.io/badge/beta-E07B39?style=flat-square" alt="Beta">
 
 Proven patterns for what you build on Peliqan. Claude builds, audits and supports each one with its own skills.
 
