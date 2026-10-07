@@ -37,8 +37,8 @@ Claude inspects your account, writes the sync on a proven framework, tests it of
 | Skill | Command | What it does |
 |---|---|---|
 | [`peliqan-sync`](skills/peliqan-sync) | `/peliqan-sync` | **Build.** Sets up a sync worker between two business systems (for example Shopify ⇄ Odoo) as one Peliqan data app, or adds a sync (orders, stock, customers, fulfilment, refunds…) to a worker you already have. |
-| [`peliqan-sync-audit`](skills/peliqan-sync-audit) | `/peliqan-sync-audit` | **Audit.** Checks a worker that looks healthy against the framework rules and its run history, before go-live or after a change. Returns a pass/warn/fail scorecard and a ranked fix list. Read-only. |
-| [`peliqan-sync-support`](skills/peliqan-sync-support) | `/peliqan-sync-support` | **Support.** Something is broken: records not arriving, a stuck bookmark, duplicates, dead-letter rows. Finds the root cause from the code, logs and link table and proposes a fix. Changes nothing without your go-ahead. |
+| [`peliqan-audit`](skills/peliqan-audit) | `/peliqan-audit` | **Audit.** Checks something that looks healthy against its rules and run history, before go-live or after a change. Today: sync workers. Returns a pass/warn/fail scorecard and a ranked fix list. Read-only. |
+| [`peliqan-support`](skills/peliqan-support) | `/peliqan-support` | **Support.** Something is broken anywhere in your account: a sync, a pipeline, a data app, an API endpoint, a stale table. Finds the root cause from the logs and data and proposes a fix. Changes nothing without your go-ahead. |
 | [`peliqan-help`](skills/peliqan-help) | `/peliqan-help` | Quick reference for all of the above. |
 
 One install gives you all four. You don't have to remember the commands either: describe what you want ("is our Shopify-Odoo worker ready to go live?", "orders stopped arriving in Odoo") and Claude picks the right skill.
@@ -213,11 +213,11 @@ A sync isn't finished when it's deployed. The other two skills cover the rest of
 
 ```mermaid
 flowchart LR
-    B["Build<br/>peliqan-sync"] --> A["Audit<br/>peliqan-sync-audit"]
+    B["Build<br/>peliqan-sync"] --> A["Audit<br/>peliqan-audit"]
     A -- "ready" --> L(["Live"])
     A -- "fixes needed" --> B
     L -- "periodic check" --> A
-    L -- "something breaks" --> S["Support<br/>peliqan-sync-support"]
+    L -- "something breaks" --> S["Support<br/>peliqan-support"]
     S -- "fix" --> B
 ```
 
@@ -232,6 +232,8 @@ Claude reads the worker's code, configuration and recent runs, and scores them a
 > Orders stopped arriving in Odoo since Tuesday.
 
 Claude finds the worker, compares the last good run with the first bad one, queries the link table for the affected records and matches the symptom to a known cause. You get the evidence, the root cause and a concrete fix. Replaying records, rewinding a bookmark or redeploying only happens after you say yes.
+
+Support isn't limited to syncs. A failed pipeline run, a crashing data app, an erroring API endpoint or a stale table goes through the same skill: it works out which object is at fault, and whether the problem is upstream, from the runs, logs and lineage.
 
 ---
 
@@ -249,7 +251,7 @@ One install gives you all skills plus the Peliqan MCP server:
 /plugin install peliqan@peliqan
 ```
 
-Send these as two separate prompts. The skills are then available as `/peliqan:peliqan-sync`, `/peliqan:peliqan-sync-audit`, `/peliqan:peliqan-sync-support` and `/peliqan:peliqan-help`. The first time a skill uses the Peliqan MCP, you sign in with your own Peliqan account.
+Send these as two separate prompts. The skills are then available as `/peliqan:peliqan-sync`, `/peliqan:peliqan-audit`, `/peliqan:peliqan-support` and `/peliqan:peliqan-help`. The first time a skill uses the Peliqan MCP, you sign in with your own Peliqan account.
 
 ### Claude Code (manual)
 
@@ -276,8 +278,8 @@ claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp
 docs/technical-overview.md           # requirements, risks and guards, QA
 skills/
 ├── peliqan-help/SKILL.md            # quick reference
-├── peliqan-sync-audit/SKILL.md      # audit: scorecard against the framework rules
-├── peliqan-sync-support/SKILL.md    # support: symptom → root cause → fix
+├── peliqan-audit/               # audit: SKILL.md + references/<domain>.md
+├── peliqan-support/             # support: SKILL.md + references/<domain>.md
 └── peliqan-sync/
     ├── SKILL.md                     # entry point: when and how Claude uses the skill
     ├── references/

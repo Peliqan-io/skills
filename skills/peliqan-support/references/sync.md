@@ -1,17 +1,12 @@
----
-name: peliqan-sync-support
-description: "Diagnoses and repairs a deployed Peliqan Reverse-ETL sync worker that is misbehaving — records not reaching the target, a bookmark that won't move, rows piling up as source_error/target_error/dead, a worker that crashed or 'aborted unexpectedly', duplicates, or a run that got slow. Reads the worker's code, run logs and link/run tables, matches the symptom to a known cause in the sync framework contract, and reports a root cause with a concrete fix. Use whenever someone says a sync is broken, stuck, stalled, slow or lossy — 'orders aren't showing up in Odoo', 'the sync stopped', 'stuck bookmark', 'dead letter rows', 'why did the worker fail last night', 'records are syncing twice', 'replay the failed records' — including when they only paste an error or a run log. Operate/repair companion to peliqan-sync, which builds and extends workers. Read-only by default; any rewind, replay or redeploy needs explicit go-ahead."
----
-
-# Peliqan Sync Support
+# Support: sync workers
 
 Troubleshoots a **live** Peliqan sync worker. The worker itself is a single
 data-app built by the `peliqan-sync` skill: one file per system pair, all syncs
 driven from `process_all()`, on a shared framework (link table + bookmarks +
 hash idempotency + error containment). Every diagnosis here is against that
-framework's contract — read `../peliqan-sync/references/framework-contract.md`
+framework's contract — read `../../peliqan-sync/references/framework-contract.md`
 before concluding anything about bookmarks, link rows or statuses, and the
-pair's `../peliqan-sync/references/systems/<system>.md` before blaming a source or target
+pair's `../../peliqan-sync/references/systems/<system>.md` before blaming a source or target
 system's behaviour.
 
 ## Ground rules
@@ -123,7 +118,7 @@ state plainly what it will do and get a yes:
   for orphan cleanup, never as part of a routine repair.
 - **Code change + redeploy** — edit through `peliqan-sync` so the output stays
   one runnable single-file data-app, run
-  `python ../peliqan-sync/scripts/test_bookmarks.py <worker.py>` before deploying, then
+  `python ../../peliqan-sync/scripts/test_bookmarks.py <worker.py>` before deploying, then
   `update_data_app`, `run_data_app`, and re-read the logs to confirm the fix
   landed. Bump nothing else in the same deploy — one change per run makes the
   next log readable.

@@ -1,9 +1,4 @@
----
-name: peliqan-sync-audit
-description: "Audits a deployed Peliqan sync worker that looks healthy — before go-live, after a change, or as a periodic check — against the sync framework contract, and returns a pass/warn/fail scorecard with evidence and a ranked fix list. Checks framework version, bookmark rules (>= drain), catalog-registered link tables, hash coverage, the 6-step per-record path, data-loss guards, leftover test settings, and runtime health from the run log and link table (error/dead counts, stuck bookmarks, duplicates). Use when someone asks to 'audit the sync', 'review our worker', 'is this sync production-ready', 'validate the Shopify-Odoo worker', 'health check on the syncs', 'can we go live', or '/peliqan-sync-audit'. Read-only: it never deploys, runs, rewinds or replays. For something already broken, use peliqan-sync-support; to apply fixes, peliqan-sync."
----
-
-# Peliqan Sync Audit
+# Audit: sync workers
 
 Checks a **live** sync worker that nobody has reported as broken yet. The worker
 is a single data-app built by the `peliqan-sync` skill: one file per system
@@ -11,16 +6,16 @@ pair, all syncs driven from `process_all()`, on a shared framework (link table +
 bookmarks + hash idempotency + error containment).
 
 The yardstick is the framework contract. Read
-`../peliqan-sync/references/framework-contract.md` and the `SKILL.md` of
+`../../peliqan-sync/references/framework-contract.md` and the `SKILL.md` of
 `peliqan-sync` (its "Production learnings" and "Keep the scaffold lean"
 sections supersede the contract where they differ) before scoring anything,
-plus `../peliqan-sync/references/systems/<system>.md` for both systems of the
+plus `../../peliqan-sync/references/systems/<system>.md` for both systems of the
 pair.
 
 Audit vs. support: support starts from a symptom ("orders don't arrive") and
 finds its cause. Audit starts from nothing and looks for the problems that have
 not surfaced yet. If the audit turns up an active incident, say so and hand it
-to `peliqan-sync-support`.
+to `peliqan-support`.
 
 ## Ground rules
 
@@ -29,7 +24,7 @@ to `peliqan-sync-support`.
   `reconcile_deletes`, or any write to the warehouse, source or target. A run
   is a write.
 - **Local offline checks are fine.** Saving the worker's script locally and
-  running `py_compile` and `../peliqan-sync/scripts/test_bookmarks.py` on it
+  running `py_compile` and `../../peliqan-sync/scripts/test_bookmarks.py` on it
   touches nothing in the account.
 - **Evidence for every score.** Each pass/warn/fail cites a code line, a log
   line or a row count. No evidence → `n/a` with what would decide it.
@@ -64,7 +59,7 @@ worker in scope. Save `raw_script` locally. Record per worker: `PAIR`,
 | C11 | Link cache | `prefetch_links` per page with write-through in `insert_link_row` | warn (slow) / **fail** if a child reads a stale cache |
 | C12 | Multi-store scoping | Under `MULTI_STORE = True`, every `find_*` and `insert_link_row` passes `store_id`/`company_id` | **fail** (duplicates) |
 | C13 | Run summary | Every run-summary tuple has the same arity, including the disabled-sync branch | **fail** (crashed a live run) |
-| C14 | Bookmark test | `python ../peliqan-sync/scripts/test_bookmarks.py <worker.py>` passes; the four pure helpers are present | **fail** |
+| C14 | Bookmark test | `python ../../peliqan-sync/scripts/test_bookmarks.py <worker.py>` passes; the four pure helpers are present | **fail** |
 | C15 | Compiles | `py_compile` clean | **fail** |
 | C16 | Traceability | `WORKER_VERSION` and a dated changelog at the top | warn |
 
@@ -113,7 +108,7 @@ the right skill:
 
 - code or framework changes → `peliqan-sync` (framework upgrade per contract §11
   for C1);
-- an active incident (R2, R3, R5 failing) → `peliqan-sync-support`.
+- an active incident (R2, R3, R5 failing) → `peliqan-support`.
 
 Close with the open questions (unanswered system checklist rows, syncs whose
 off-switch nobody could explain). Never apply a fix from this skill.

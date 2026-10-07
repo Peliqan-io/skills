@@ -53,6 +53,6 @@ Most rules here come from a real incident. A guard without a story behind it ten
 | **Offline checks** | Before every deploy | The script compiles and lints clean. `test_bookmarks.py` proves the bookmark rules. A simulated run against fake systems: run 1 creates, run 2 writes nothing, run 3 propagates exactly one change. |
 | **Deploy check** | After every deploy | The deployed script is read back and compared with what was tested. |
 | **Live, staged** | First run and after changes | The staged first run from §2, on realistic seeded test data (orders with discounts, shipping and deviating taxes, not one bare order line). |
-| **Audit** | Before go-live, then periodically | `peliqan-sync-audit`: scorecard against the framework rules and the run history. |
+| **Audit** | Before go-live, then periodically | `peliqan-audit`: scorecard against the framework rules and the run history. |
 
 **What tests cannot guard:** write permissions in the target, whether the field mappings are right for *your* business, and the cost of a full re-drive. A matching deploy check proves the right code arrived, not that it runs. That's what the staged first run and the audit are for.
