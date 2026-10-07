@@ -5,10 +5,11 @@ One folder per product. The [root README](../README.md) is the front door and on
 | Product | Docs | Build skill |
 |---|---|---|
 | Syncs | [syncs/](syncs/README.md) | `peliqan-sync` |
+| Dashboards | [dashboards/](dashboards/README.md) | `peliqan-dashboard` |
 
 ## Adding a product
 
-Adding a product (for example dashboards) takes four things:
+Adding a product takes four things:
 
 1. **A build skill:** `skills/peliqan-<product>/`.
 2. **A reference file in audit and in support:** `skills/peliqan-audit/references/<product>.md` and `skills/peliqan-support/references/<product>.md`, plus a row in the routing table of each `SKILL.md`.

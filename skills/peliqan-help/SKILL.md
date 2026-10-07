@@ -12,7 +12,8 @@ Display this reference card when invoked. One-shot: do not call any tools.
 | Skill | Call it | What it does | Writes to your account? |
 |---|---|---|---|
 | **peliqan-sync** | `/peliqan-sync` | **Build.** Sets up a sync worker for a system pair, or adds a sync (orders, stock, customers…) to an existing one. Tests, deploys and verifies it. | Yes, after you confirm |
-| **peliqan-audit** | `/peliqan-audit` | **Audit.** Checks something that looks healthy (today: sync workers) against the framework rules and its run history. Returns a scorecard and a fix list. | No, read-only |
+| **peliqan-dashboard** | `/peliqan-dashboard` | **Build.** Builds a dashboard on medallion layers (Bronze/Silver/Gold/consumer), rebuilding a Power BI report with its PBIX/DAX as ground truth, or from scratch. Verifies every number before building. | Yes, after you confirm |
+| **peliqan-audit** | `/peliqan-audit` | **Audit.** Checks something that looks healthy (sync workers, dashboards) against the framework rules and its run history. Returns a scorecard and a fix list. | No, read-only |
 | **peliqan-support** | `/peliqan-support` | **Support.** Something is broken anywhere in your account (a sync, pipeline, data app, endpoint, table): finds the root cause from the logs and data and proposes a fix. | Only after your explicit go-ahead |
 | **peliqan-help** | `/peliqan-help` | This card. | No |
 
@@ -26,24 +27,28 @@ the right one:
 |---|---|
 | "Build a sync between our webshop and our ERP" | peliqan-sync |
 | "Add a stock sync from the ERP to the webshop" | peliqan-sync |
+| "Rebuild this Power BI report as a dashboard" | peliqan-dashboard |
+| "Set up bronze/silver/gold for our sales data" | peliqan-dashboard |
 | "Is our order sync ready to go live?" | peliqan-audit |
 | "Run a health check on our syncs" | peliqan-audit |
 | "Orders stopped arriving in the ERP since Tuesday" | peliqan-support |
 | "Why are there dead-letter rows?" | peliqan-support |
 | "The pipeline failed last night" | peliqan-support |
+| "The dashboard numbers don't match Power BI anymore" | peliqan-support |
 
 ## Typical lifecycle
 
-1. **Build** the worker and its syncs with `peliqan-sync`.
+1. **Build** with the product's build skill: `peliqan-sync` for syncs,
+   `peliqan-dashboard` for dashboards.
 2. **Audit** it with `peliqan-audit` before go-live, and again after changes.
 3. **Support** with `peliqan-support` when something breaks. The fix goes
-   back through `peliqan-sync`.
+   back through the build skill.
 
 ## Requirements
 
 - The Peliqan MCP server connected to Claude: `https://mcp.eu.peliqan.io/mcp`.
 - Install all skills together. Audit and support read the framework rules
-  shipped inside `peliqan-sync`.
+  shipped inside the build skills.
 
 Audit and support cover more domains over time; each new one is a reference
 file inside them, so the commands stay the same.

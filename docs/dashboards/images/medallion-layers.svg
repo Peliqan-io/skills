@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 400" width="1000" height="400" font-family="DejaVu Sans, Verdana, Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#E07B39"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="999" height="399" rx="10" fill="#FFFFFF" stroke="#E3E3E3"/>
+
+  <!-- Warehouse frame -->
+  <text x="172" y="52" fill="#2F3B4C" font-size="12px" font-weight="bold">PELIQAN DATA WAREHOUSE</text>
+  <rect x="172" y="62" width="646" height="182" rx="10" fill="none" stroke="#333" stroke-width="1.2" stroke-dasharray="6 4"/>
+
+  <!-- Sources -->
+  <rect x="20" y="96" width="132" height="116" rx="6" fill="#EEF0F3" stroke="#C5CAD1" stroke-width="1.5"/>
+  <text x="86" y="128" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">Sources</text>
+  <text x="86" y="150" fill="#666" font-size="10px" text-anchor="middle">ERP, CRM, API,</text>
+  <text x="86" y="165" fill="#666" font-size="10px" text-anchor="middle">files…</text>
+  <text x="86" y="186" fill="#999" font-size="9px" text-anchor="middle">loaded by connectors</text>
+
+  <!-- Bronze -->
+  <rect x="190" y="96" width="132" height="116" rx="6" fill="#FFFFFF" stroke="#333" stroke-width="1.5"/>
+  <rect x="190" y="96" width="132" height="6" fill="#B87333"/>
+  <text x="256" y="128" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">Bronze</text>
+  <text x="256" y="150" fill="#666" font-size="10px" text-anchor="middle">raw, as sent</text>
+  <text x="256" y="165" fill="#666" font-size="10px" text-anchor="middle">append-only</text>
+  <text x="256" y="180" fill="#666" font-size="10px" text-anchor="middle">never transformed</text>
+
+  <!-- Silver -->
+  <rect x="346" y="96" width="132" height="116" rx="6" fill="#FFFFFF" stroke="#333" stroke-width="1.5"/>
+  <rect x="346" y="96" width="132" height="6" fill="#A8A9AD"/>
+  <text x="412" y="128" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">Silver</text>
+  <text x="412" y="150" fill="#666" font-size="10px" text-anchor="middle">one clean table</text>
+  <text x="412" y="165" fill="#666" font-size="10px" text-anchor="middle">per source</text>
+  <text x="412" y="180" fill="#666" font-size="10px" text-anchor="middle">no joins, no rules</text>
+
+  <!-- Gold -->
+  <rect x="502" y="96" width="132" height="116" rx="6" fill="#FFFFFF" stroke="#333" stroke-width="2.5"/>
+  <rect x="502" y="96" width="132" height="6" fill="#D4A017"/>
+  <text x="568" y="128" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">Gold</text>
+  <text x="568" y="150" fill="#666" font-size="10px" text-anchor="middle">sources combined</text>
+  <text x="568" y="168" fill="#D0652A" font-size="10px" font-weight="bold" text-anchor="middle">business rules</text>
+  <text x="568" y="182" fill="#D0652A" font-size="10px" font-weight="bold" text-anchor="middle">live here only</text>
+
+  <!-- Consumer -->
+  <rect x="658" y="96" width="140" height="116" rx="6" fill="#FFFFFF" stroke="#333" stroke-width="1.5"/>
+  <text x="728" y="128" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">dm_&lt;domain&gt;</text>
+  <text x="728" y="150" fill="#666" font-size="10px" text-anchor="middle">passthrough of Gold</text>
+  <text x="728" y="165" fill="#666" font-size="10px" text-anchor="middle">fct_ / dim_ tables</text>
+  <text x="728" y="180" fill="#666" font-size="10px" text-anchor="middle">what consumers read</text>
+
+  <!-- Dashboard -->
+  <rect x="842" y="96" width="138" height="116" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="911" y="128" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">Dashboard</text>
+  <text x="911" y="150" fill="#666" font-size="10px" text-anchor="middle">e.g. Streamlit</text>
+  <text x="911" y="165" fill="#666" font-size="10px" text-anchor="middle">data app</text>
+  <text x="911" y="180" fill="#666" font-size="10px" text-anchor="middle">reads dm_ only</text>
+
+  <!-- Flow -->
+  <path d="M152,154 H186" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M322,154 H342" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M478,154 H498" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M634,154 H654" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M798,154 H838" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <!-- Analogy -->
+  <text x="256" y="230" fill="#999" font-size="9px" text-anchor="middle">ingredients delivered</text>
+  <text x="412" y="230" fill="#999" font-size="9px" text-anchor="middle">washed and chopped</text>
+  <text x="568" y="230" fill="#999" font-size="9px" text-anchor="middle">cooked to the recipe</text>
+  <text x="728" y="230" fill="#999" font-size="9px" text-anchor="middle">plated</text>
+  <text x="911" y="230" fill="#999" font-size="9px" text-anchor="middle">served</text>
+
+  <!-- Trace back -->
+  <path d="M911,268 H262" stroke="#E07B39" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ao)"/>
+  <text x="586" y="290" fill="#D0652A" font-size="10px" text-anchor="middle">A wrong number is traced back one layer at a time, to the one layer that introduced it.</text>
+  <text x="586" y="306" fill="#555" font-size="10px" text-anchor="middle">A rule changes in Gold once, and every dashboard on top of it follows automatically.</text>
+
+  <!-- Legend -->
+  <path d="M30,350 H970" stroke="#E3E3E3"/>
+  <rect x="30" y="368" width="12" height="12" rx="2" fill="#FDEEE2" stroke="#E07B39"/><text x="50" y="378" fill="#555" font-size="10px">runs in Peliqan (data app)</text>
+  <rect x="250" y="368" width="12" height="12" rx="2" fill="#FFFFFF" stroke="#333"/><text x="270" y="378" fill="#555" font-size="10px">data in the warehouse</text>
+  <rect x="440" y="368" width="12" height="12" rx="2" fill="#EEF0F3" stroke="#C5CAD1"/><text x="460" y="378" fill="#555" font-size="10px">external source</text>
+  <path d="M600,374 H632" stroke="#E07B39" stroke-width="1.5" stroke-dasharray="5 4"/><text x="640" y="378" fill="#555" font-size="10px">debugging path</text>
+</svg>

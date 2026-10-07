@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" width="1000" height="380" font-family="DejaVu Sans, Verdana, Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#E07B39"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="999" height="379" rx="10" fill="#FFFFFF" stroke="#E3E3E3"/>
+
+  <!-- Ground truth input -->
+  <text x="344" y="40" fill="#2F3B4C" font-size="12px" font-weight="bold">GROUND TRUTH</text>
+  <rect x="344" y="50" width="302" height="40" rx="6" fill="#E9EEF4" stroke="#5B6B80" stroke-width="1.5"/>
+  <text x="495" y="68" fill="#333" font-size="11px" font-weight="bold" text-anchor="middle">PBIX page · DAX measures · screenshots</text>
+  <text x="495" y="82" fill="#666" font-size="9px" text-anchor="middle">or, from scratch: the business rules you confirm</text>
+  <path d="M414,90 V132" stroke="#5B6B80" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+  <path d="M576,90 V132" stroke="#5B6B80" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+
+  <!-- Steps -->
+  <rect x="20" y="136" width="140" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="90" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">1 Layers</text>
+  <text x="90" y="180" fill="#666" font-size="10px" text-anchor="middle">Bronze → Silver →</text>
+  <text x="90" y="194" fill="#666" font-size="10px" text-anchor="middle">Gold → dm_</text>
+
+  <rect x="182" y="136" width="140" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="252" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">2 Catalog</text>
+  <text x="252" y="180" fill="#666" font-size="10px" text-anchor="middle">every visual: type,</text>
+  <text x="252" y="194" fill="#666" font-size="10px" text-anchor="middle">fields, styling</text>
+
+  <rect x="344" y="136" width="140" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="414" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">3 Translate</text>
+  <text x="414" y="180" fill="#666" font-size="10px" text-anchor="middle">DAX → SQL in Gold,</text>
+  <text x="414" y="194" fill="#666" font-size="10px" text-anchor="middle">literally, quirks too</text>
+
+  <rect x="506" y="136" width="140" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="2.5"/>
+  <text x="576" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">4 Verify</text>
+  <text x="576" y="180" fill="#666" font-size="10px" text-anchor="middle">one real record,</text>
+  <text x="576" y="194" fill="#666" font-size="10px" text-anchor="middle">hand-computed vs SQL</text>
+  <text x="576" y="208" fill="#999" font-size="9px" text-anchor="middle">kept in CHECK schema</text>
+
+  <rect x="668" y="136" width="140" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="738" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">5 Build</text>
+  <text x="738" y="180" fill="#666" font-size="10px" text-anchor="middle">dashboard on dm_,</text>
+  <text x="738" y="194" fill="#666" font-size="10px" text-anchor="middle">same visuals</text>
+
+  <rect x="830" y="136" width="150" height="92" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="905" y="160" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">6 Document</text>
+  <text x="905" y="180" fill="#666" font-size="10px" text-anchor="middle">technical reference</text>
+  <text x="905" y="194" fill="#666" font-size="10px" text-anchor="middle">+ plain-language doc</text>
+
+  <path d="M160,182 H178" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M322,182 H340" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M484,182 H502" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M646,182 H664" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M808,182 H826" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <!-- Checkpoints -->
+  <rect x="96" y="98" width="150" height="22" rx="11" fill="#FFFFFF" stroke="#E07B39" stroke-width="1.2"/>
+  <text x="171" y="113" fill="#D0652A" font-size="9px" text-anchor="middle">you confirm the page</text>
+  <path d="M171,120 V178" stroke="#E07B39" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <rect x="660" y="98" width="130" height="22" rx="11" fill="#FFFFFF" stroke="#E07B39" stroke-width="1.2"/>
+  <text x="725" y="113" fill="#D0652A" font-size="9px" text-anchor="middle">you confirm: verified</text>
+  <path d="M660,109 H657 V178" stroke="#E07B39" stroke-width="1.2" stroke-dasharray="3 3" fill="none"/>
+
+  <!-- Mismatch loop -->
+  <path d="M576,228 V262 H414 V232" stroke="#E07B39" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ao)"/>
+  <text x="495" y="278" fill="#D0652A" font-size="10px" text-anchor="middle">mismatch → fix the translation</text>
+
+  <text x="500" y="312" fill="#555" font-size="10px" text-anchor="middle">After go-live: data freshness and load time are checked as their own passes, separate from correctness.</text>
+
+  <!-- Legend -->
+  <path d="M30,336 H970" stroke="#E3E3E3"/>
+  <rect x="30" y="352" width="12" height="12" rx="2" fill="#E9EEF4" stroke="#5B6B80"/><text x="50" y="362" fill="#555" font-size="10px">input from you</text>
+  <rect x="190" y="352" width="12" height="12" rx="2" fill="#FDEEE2" stroke="#E07B39"/><text x="210" y="362" fill="#555" font-size="10px">step Claude takes</text>
+  <rect x="360" y="352" width="24" height="12" rx="6" fill="#FFFFFF" stroke="#E07B39"/><text x="392" y="362" fill="#555" font-size="10px">checkpoint: you decide</text>
+  <path d="M560,358 H592" stroke="#E07B39" stroke-width="1.5" stroke-dasharray="5 4"/><text x="600" y="362" fill="#555" font-size="10px">loop until it matches</text>
+</svg>

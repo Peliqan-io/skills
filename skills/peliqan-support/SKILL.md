@@ -1,6 +1,6 @@
 ---
 name: peliqan-support
-description: "Triages anything broken in a Peliqan account — a sync worker that stopped or duplicates, a failed pipeline run, a data app that crashed, an API endpoint returning errors, a table that went stale or empty — and comes back with an evidence-backed root cause plus a concrete fix. Reads runs, logs, lineage and the sync framework's state tables through the Peliqan MCP. Use whenever someone reports a breakage or asks why something failed: 'the sync is broken', 'orders stopped arriving in the ERP', 'stuck bookmark', 'dead letter rows', 'records are syncing twice', 'the pipeline failed last night', 'why is this table empty', 'the data app is erroring', 'nothing has updated since Tuesday', 'the data is stale', '/peliqan-support' — including when they only paste an error or a run log. Read-only by default; any rewind, replay, rerun or redeploy needs explicit go-ahead. For building or changing something, use the build skill (peliqan-sync for syncs)."
+description: "Triages anything broken in a Peliqan account — a sync worker that stopped or duplicates, a failed pipeline run, a data app that crashed, an API endpoint returning errors, a table that went stale or empty, a dashboard that errors or whose numbers drifted from Power BI — and comes back with an evidence-backed root cause plus a concrete fix. Reads runs, logs, lineage and the sync framework's state tables through the Peliqan MCP. Use whenever someone reports a breakage or asks why something failed: 'the sync is broken', 'orders stopped arriving in the ERP', 'stuck bookmark', 'dead letter rows', 'records are syncing twice', 'the pipeline failed last night', 'why is this table empty', 'the data app is erroring', 'nothing has updated since Tuesday', 'the data is stale', 'the dashboard numbers don't match Power BI', 'the gold table is stale', 'the dashboard is erroring', '/peliqan-support' — including when they only paste an error or a run log. Read-only by default; any rewind, replay, rerun or redeploy needs explicit go-ahead. For building or changing something, use the build skill (peliqan-sync for syncs, peliqan-dashboard for dashboards)."
 ---
 
 # Peliqan Support
@@ -12,6 +12,7 @@ object in the account. Domain-specific diagnosis lives in `references/`:
 | Failing object | Read |
 |---|---|
 | A sync worker (a data app for a system pair, syncs driven from `process_all`) | `references/sync.md` |
+| A dashboard or one of its medallion layers (Bronze/Silver/Gold/`dm_*`) | `references/dashboard.md` |
 | Anything else (pipelines, other data apps, API endpoints, tables) | The steps below |
 
 Paths inside a reference file are relative to that file.
@@ -45,9 +46,9 @@ ambiguous. Orient with `list_sub_accounts`, `list_connections`,
 `list_data_apps`, `list_api_endpoints`, `list_databases` / `list_schemas` /
 `list_tables`.
 
-If the object is a sync worker, continue in `references/sync.md` and use the
-steps below only for the account-level context around it: is the upstream
-connection healthy, did the source system change, when did it last work.
+If the object is a sync worker, continue in `references/sync.md`; if it is a
+dashboard or a medallion layer, in `references/dashboard.md`. Use the steps below only for the account-level
+context around it: is the upstream connection healthy, did the source system change, when did it last work.
 
 ## Step 2 — Read the evidence
 

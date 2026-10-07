@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "peliqan",
-      "description": "Build, audit and support Peliqan sync workers.",
+      "description": "Build, audit and support Peliqan syncs and dashboards.",
       "source": "./",
       "category": "productivity"
     }
