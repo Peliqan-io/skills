@@ -2,12 +2,14 @@
 
 Diagnoses a dashboard built with the `peliqan-dashboard` skill that is erroring,
 showing stale data, or showing numbers that no longer match the report it
-replaced. Data flows Bronze → Silver → Gold → consumer layer (`dm_<domain>`),
-and the dashboard app reads only from the consumer layer.
+replaced or the rules agreed at build time. Data flows Bronze → Silver → Gold →
+consumer layer (`dm_<domain>`), or in a light model straight from the source
+tables into one consumer view. The dashboard app reads only from the consumer
+layer.
 
 That skill is the contract for what each layer and measure is *supposed* to
 do. Read `../../peliqan-dashboard/SKILL.md` and, depending on the symptom,
-`medallion_architecture.md`, `dax_comparison.md` or
+`medallion_architecture.md`, `formula_translation.md` or
 `freshness_and_performance.md` from `../../peliqan-dashboard/references/`.
 Use them as the reference for expected behaviour only: you don't rebuild
 layers, rewrite measures or redeploy the dashboard. The fix goes through
@@ -20,7 +22,7 @@ Most dashboard reports come down to two distinctions. Settle them first:
 | Question | How to tell |
 |---|---|
 | **Dashboard-side or warehouse-side?** | Dashboard-side: the app run logs show an exception, or the app renders wrong from correct `dm_*` data. Warehouse-side: the `dm_*` table itself returns the wrong or old values. |
-| **Stale or wrong?** | Stale: the values were right and stopped updating. An upstream pipeline stopped, a refresh order broke, or incremental sync missed a record. Wrong: the values are current but don't match the source report. A transform, binding or measure disagrees with the PBIX. |
+| **Stale or wrong?** | Stale: the values were right and stopped updating. An upstream pipeline stopped, a refresh order broke, or incremental sync missed a record. Wrong: the values are current but don't match the source report or the agreed rules. A transform, binding or measure disagrees with it. |
 
 ## Step 2 — Evidence per class
 
@@ -38,7 +40,7 @@ Most dashboard reports come down to two distinctions. Settle them first:
   compare every field, layer by layer (Silver → Gold → `dm_*`), to find the
   layer where the value first diverges. Check the existing `CHECK` schema
   queries for that KPI first: they record what was verified at build time.
-  Then match the divergence against `dax_comparison.md`.
+  Then match the divergence against `formula_translation.md`.
 - **Slow:** check for full-table pulls filtered in app code and for
   sequential independent loads (`freshness_and_performance.md`).
 

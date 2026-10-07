@@ -1,13 +1,14 @@
 # Audit: dashboards
 
-Checks a deployed dashboard and its medallion layers that nobody has reported
-as broken yet. The dashboard was built with the `peliqan-dashboard` skill: data
-in Bronze → Silver → Gold → a consumer layer (`dm_<domain>`), and a dashboard
-app that reads only from the consumer layer.
+Checks a deployed dashboard and its data model that nobody has reported as
+broken yet. The dashboard was built with the `peliqan-dashboard` skill: either a
+full medallion model (Bronze → Silver → Gold → consumer layer `dm_<domain>`) or
+a light one (a single consumer view on the source tables), and a dashboard app
+that reads only from the consumer layer.
 
 The yardstick is that skill. Read `../../peliqan-dashboard/SKILL.md` and
 `../../peliqan-dashboard/references/medallion_architecture.md` before scoring
-anything. Use `dax_comparison.md`, `dashboard_build_gotchas.md` and
+anything. Use `formula_translation.md`, `source_reports.md`, `dashboard_build_gotchas.md` and
 `freshness_and_performance.md` from the same folder for the checks that cite
 them.
 
@@ -17,7 +18,7 @@ them.
 `get_data_app` and save the script locally. `list_schemas` / `list_tables` for
 the layer schemas (Bronze, Silver, Gold or Core, `dm_*`, `CHECK`), and
 `get_table` on each consumer-layer table for its query definition. Ask whether
-a PBIX, DAX measures or a reference screenshot exists: with one, correctness
+a source report exists (a PBIX or other BI file, its formulas, or screenshots): with one, correctness
 can be scored against it; without one, score only structure and hygiene and
 say so.
 
@@ -25,24 +26,25 @@ say so.
 
 | # | Check | Pass when | Severity if not |
 |---|---|---|---|
-| A1 | Layers exist | Bronze, Silver, Gold (or Core) and a consumer layer, matching the account's own naming convention | **fail** |
-| A2 | Bronze is raw | No transformations in Bronze | warn |
-| A3 | Silver is per source | One cleaned table per source entity; no cross-source joins, no business rules | **fail** |
-| A4 | Business rules live in Gold | Every rule (revenue vs. cost, derived amounts, status labels) is defined in Gold only | **fail** |
-| A5 | Consumer layer is a passthrough | Every `dm_*` table is `SELECT … FROM GOLD.x` or light reshaping; none references `SILVER.*`, unions sources or applies a rule | **fail** |
+| A1 | Model fits the need | Full medallion when there are several sources, real business rules or several consumers; a single consumer view is fine for one clean source. Follows the account's own naming | warn |
+| A2 | Bronze is raw | (Full model) No transformations in Bronze | warn |
+| A3 | Silver is per source | (Full model) One cleaned table per source entity; no cross-source joins, no business rules | **fail** |
+| A4 | One place per rule | Every rule (revenue vs. cost, derived amounts, status labels) is defined once: in Gold, or in the single consumer view of a light model | **fail** |
+| A5 | Consumer layer is a passthrough | (Full model) Every `dm_*` table is `SELECT … FROM GOLD.x` or light reshaping; none references `SILVER.*`, unions sources or applies a rule | **fail** |
 | A6 | Dashboard reads the consumer layer only | The script queries `dm_*` tables only, never Gold or Silver | **fail** |
 
 ## Step 3 — Correctness
 
-Only with a ground truth (PBIX, DAX or screenshots). Without one: `n/a`, and
-list the assumptions the build made instead.
+Only with a ground truth: the source report's formulas or screenshots, or the
+business rules the user confirmed at build time. Without one: `n/a`, and list
+the assumptions the build made instead.
 
 | # | Check | Pass when | Severity if not |
 |---|---|---|---|
 | K1 | Verification queries | A `CHECK` schema holds the verification queries for each KPI | warn |
 | K2 | One record, end to end | For one real record, every displayed field matches the source report | **fail** |
-| K3 | Field bindings | Slicers, filters and matrix groupings use the exact field the PBIX binds, not a friendlier substitute (`dax_comparison.md` §9) | **fail** |
-| K4 | Known traps | Per-unit vs. per-total, sign conventions, padded codes, single-value picks over ambiguous values (`dax_comparison.md`) | **fail** per trap hit |
+| K3 | Field bindings | Slicers, filters and matrix groupings use the exact field the source report binds, not a friendlier substitute (`formula_translation.md` §9) | **fail** |
+| K4 | Known traps | Per-unit vs. per-total, sign conventions, padded codes, single-value picks over ambiguous values (`formula_translation.md`) | **fail** per trap hit |
 
 ## Step 4 — Presentation
 

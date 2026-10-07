@@ -12,7 +12,7 @@ Show the overview below as-is. It needs no tool calls and no account access.
 | Skill | Call it | What it does | Writes to your account? |
 |---|---|---|---|
 | **peliqan-sync** | `/peliqan-sync` | **Build.** Sets up a sync worker for a system pair, or adds a sync (orders, stock, customers…) to an existing one. Tests, deploys and verifies it. | Yes, after you confirm |
-| **peliqan-dashboard** | `/peliqan-dashboard` | **Build.** Builds a dashboard on medallion layers (Bronze/Silver/Gold/consumer), rebuilding a Power BI report with its PBIX/DAX as ground truth, or from scratch. Verifies every number before building. | Yes, after you confirm |
+| **peliqan-dashboard** | `/peliqan-dashboard` | **Build.** Builds a dashboard on your warehouse: rebuilding a report from any BI tool (Power BI, Tableau, Excel…), from scratch, or on existing tables. Sets up the data model it needs and verifies every number before building. | Yes, after you confirm |
 | **peliqan-audit** | `/peliqan-audit` | **Audit.** Checks something that looks healthy (sync workers, dashboards) against the framework rules and its run history. Returns a scorecard and a fix list. | No, read-only |
 | **peliqan-support** | `/peliqan-support` | **Support.** Something is broken anywhere in your account (a sync, pipeline, data app, endpoint, table): finds the root cause from the logs and data and proposes a fix. | Only after your explicit go-ahead |
 | **peliqan-help** | `/peliqan-help` | This card. | No |
@@ -28,6 +28,7 @@ the right one:
 | "Build a sync between our webshop and our ERP" | peliqan-sync |
 | "Add a stock sync from the ERP to the webshop" | peliqan-sync |
 | "Rebuild this Power BI report as a dashboard" | peliqan-dashboard |
+| "Build a sales dashboard on our order tables" | peliqan-dashboard |
 | "Set up bronze/silver/gold for our sales data" | peliqan-dashboard |
 | "Is our order sync ready to go live?" | peliqan-audit |
 | "Run a health check on our syncs" | peliqan-audit |
