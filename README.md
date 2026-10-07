@@ -30,7 +30,7 @@ Proven patterns for what you build on Peliqan. Claude builds, audits and support
 
 More frameworks will be added the same way, each with its own build skill and docs.
 
-## Skills
+## Skills <img src="https://img.shields.io/badge/beta-E07B39?style=flat-square" alt="Beta">
 
 | Skill | Command | What it does |
 |---|---|---|
