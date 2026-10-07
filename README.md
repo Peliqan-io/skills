@@ -1,6 +1,35 @@
-# Peliqan Skills
+<h1 align="center">Peliqan Skills</h1>
+
+<p align="center">
+  <em>You describe the sync. Claude builds it, tests it and deploys it on your Peliqan account.</em>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/works%20with-Claude%20Code%20%7C%20claude.ai-111111?style=flat-square" alt="Works with Claude Code and claude.ai">
+  <img src="https://img.shields.io/badge/skills-1-111111?style=flat-square" alt="1 skill">
+  <img src="https://img.shields.io/badge/verified-Shopify%20%E2%87%84%20Odoo-111111?style=flat-square" alt="Verified on Shopify and Odoo">
+  <img src="https://img.shields.io/badge/MCP-Peliqan-111111?style=flat-square" alt="Peliqan MCP">
+</p>
+
+<p align="center">
+  <strong>One worker per system pair &middot; no duplicates &middot; nothing lost silently &middot; code you own</strong>
+</p>
+
+---
 
 Skills that let Claude build on your [Peliqan](https://peliqan.io) account for you, with the same patterns our own team uses in production.
+
+### Before / after
+
+You want every new Shopify order to show up in Odoo as a sales order.
+
+**Without the skill:** someone writes API calls, invents their own way to remember what was already sent, finds the duplicates a week later and wonders why three orders never arrived.
+
+**With the skill:**
+
+> Add an order sync from Shopify to Odoo: sales order with order lines, customer as partner.
+
+Claude inspects your account, writes the sync on a proven framework, tests it offline, deploys it, runs a limited test and proves on a second run that nothing gets written twice. Every order it touches is traceable in your warehouse.
 
 | Skill | What it does |
 |---|---|
