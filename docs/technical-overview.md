@@ -1,52 +1,12 @@
 # Sync workers: technical overview
 
-How a Peliqan sync worker built with these skills is put together, what a run does, what your account needs, which risks the framework guards against, and how it is tested.
+Why you can trust a sync worker built with these skills: what your account needs, how the first run is staged, which risks the framework guards against, and how a worker is tested.
 
-For the short version, see the [README](../README.md).
-
----
-
-## 1. What a worker is
-
-A **worker** is one Peliqan data app per system pair, for example Shopify ⇄ Odoo. It runs every sync between those two systems, and keeps its state in your data warehouse.
-
-| Part | What it holds |
-|---|---|
-| **System A**, e.g. Shopify | Read and written through its Peliqan connection (GraphQL for Shopify). Products, variants, customers, orders… |
-| **System B**, e.g. Odoo | Read and written through its Peliqan connection (RPC for Odoo). `product.template`, `product.product`, `res.partner`, `sale.order`, `stock.picking`… |
-| **Data warehouse** | The worker's state, in schema `link_tables`: the link table, the run log and the monitor views. The worker creates and registers these itself. |
-
-Every processed record leaves a row in the **link table** with a hash of the fields the sync owns. On the next run, unchanged records are skipped instead of written again. That link table is the backbone of the whole design: it is what makes every run idempotent.
+How a worker and a run work is explained in the [README](../README.md#2-how-a-sync-worker-works).
 
 ---
 
-## 2. One run, step by step
-
-A run walks through the enabled syncs in registry order: parents before children, so products before orders. Inside a sync, every record follows the same six steps. A failed write lands in the link table as `target_error` and does not stop the run.
-
-```mermaid
-flowchart LR
-    V["1 Validate<br/>source record"] --> L["2 Look up<br/>in link table"]
-    L --> M["3 Map + hash<br/>(skip if unchanged)"]
-    M --> W["4 Write back<br/>to target"]
-    W --> H["5 Handle<br/>response"]
-    H --> A["6 Append<br/>link row"]
-```
-
-| Step | What happens | On failure |
-|---|---|---|
-| 1. Validate | Required fields present, record usable | `source_error` row |
-| 2. Look up | Link table says: create or update, and what the last hash was | — |
-| 3. Map + hash | Fields mapped; hash over the owned fields. Same hash → skip | — |
-| 4. Write back | One target record per call | — |
-| 5. Handle response | Checks the status **and** functional errors hidden in a successful reply (Shopify `userErrors`, an Odoo fault in a 200) | `target_error` row |
-| 6. Append link row | `ok` plus the hash, or the error with its details | retried next run, `dead` after `MAX_ATTEMPTS` |
-
-The bookmark of a sync only moves past records that were actually processed. Incremental reads use `>=` on the change timestamp, because many records can share the same second. A strict `>` would permanently skip the rest of such a cluster after an interrupted run.
-
----
-
-## 3. What your account needs
+## 1. What your account needs
 
 | Requirement | Why |
 |---|---|
@@ -59,7 +19,7 @@ The bookmark of a sync only moves past records that were actually processed. Inc
 
 ---
 
-## 4. The staged first run
+## 2. The staged first run
 
 A first run is a write to two live systems, so it is staged:
 
@@ -71,7 +31,7 @@ A first run is a write to two live systems, so it is staged:
 
 ---
 
-## 5. Risks and the guards that catch them
+## 3. Risks and the guards that catch them
 
 Most rules here come from a real incident. A guard without a story behind it tends to get removed sooner or later.
 
@@ -86,28 +46,13 @@ Most rules here come from a real incident. A guard without a story behind it ten
 
 ---
 
-## 6. QA: offline first, then live
+## 4. QA: offline first, then live
 
 | Layer | When | What it checks |
 |---|---|---|
 | **Offline checks** | Before every deploy | The script compiles and lints clean. `test_bookmarks.py` proves the bookmark rules. A simulated run against fake systems: run 1 creates, run 2 writes nothing, run 3 propagates exactly one change. |
 | **Deploy check** | After every deploy | The deployed script is read back and compared with what was tested. |
-| **Live, staged** | First run and after changes | The staged first run from §4, on realistic seeded test data (orders with discounts, shipping and deviating taxes, not one bare order line). |
+| **Live, staged** | First run and after changes | The staged first run from §2, on realistic seeded test data (orders with discounts, shipping and deviating taxes, not one bare order line). |
 | **Audit** | Before go-live, then periodically | `peliqan-sync-audit`: scorecard against the framework rules and the run history. |
 
 **What tests cannot guard:** write permissions in the target, whether the field mappings are right for *your* business, and the cost of a full re-drive. A matching deploy check proves the right code arrived, not that it runs. That's what the staged first run and the audit are for.
-
----
-
-## 7. Monitoring
-
-Every worker creates these in your warehouse:
-
-| Object | Use it for |
-|---|---|
-| `link_<pair>` | Any source record → its target record, plus the full history of every write |
-| `runs_<pair>` | Every run: when, which sync, processed / skipped / failed |
-| `v_run_summary_<pair>` | Health per sync at a glance |
-| `v_dead_letter_<pair>` | Records that stopped retrying and need a person |
-
-They are plain warehouse tables: query them, put them on a dashboard, or alert on them.
