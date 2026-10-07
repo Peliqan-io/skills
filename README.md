@@ -28,7 +28,30 @@
 
 Peliqan Skills teach Claude how to work on your [Peliqan](https://peliqan.io) account the way we do. Claude talks to your account through the Peliqan MCP server: it inspects connections and tables, builds and deploys, and reads run logs. Anything that writes to your account waits for your go-ahead.
 
-## Frameworks <img src="https://img.shields.io/badge/beta-E07B39?style=flat-square" alt="Beta">
+## Installation
+
+**Claude app:** Settings → Plugins → **Add marketplace** → `https://github.com/Peliqan-io/skills`, then install **peliqan**.
+
+**Claude Code:** send these one at a time:
+
+```
+/plugin marketplace add Peliqan-io/skills
+/plugin install peliqan@peliqan
+```
+
+One plugin gives you every skill and the Peliqan MCP server. The first time a skill uses the MCP, you sign in with your Peliqan account.
+
+<details>
+<summary>Without the plugin</summary>
+
+Install every skill: audit and support read the rules inside the build skills.
+
+- **Claude Code:** `git clone https://github.com/Peliqan-io/skills.git`, copy `skills/*` to `~/.claude/skills/`, then `claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp`.
+- **Claude app:** zip each folder under `skills/` separately, upload the zips under **Settings → Capabilities → Skills**, and add `https://mcp.eu.peliqan.io/mcp` as a custom connector.
+
+</details>
+
+## Frameworks <img src="https://img.shields.io/badge/beta-ED7D2B?style=flat&labelColor=383838" alt="Beta">
 
 Proven patterns for what you build on Peliqan. Claude builds, audits and supports each one with its own skills.
 
@@ -39,7 +62,7 @@ Proven patterns for what you build on Peliqan. Claude builds, audits and support
 
 More frameworks will be added the same way, each with its own build skill and docs.
 
-## Skills <img src="https://img.shields.io/badge/beta-E07B39?style=flat-square" alt="Beta">
+## Skills <img src="https://img.shields.io/badge/beta-ED7D2B?style=flat&labelColor=383838" alt="Beta">
 
 | Skill | Command | What it does |
 |---|---|---|
@@ -58,41 +81,6 @@ Every framework follows the same lifecycle. Each framework has its own build ski
 <p align="center">
   <img src="docs/images/lifecycle.svg" width="900" alt="Build with the framework's build skill, audit with peliqan-audit, then live. Audit sends fixes back to build; live is audited periodically or after a change; when something breaks, peliqan-support finds the root cause and the fix goes back through the build skill.">
 </p>
-
-## Installation
-
-### Claude app: add the marketplace (recommended)
-
-1. Go to **Settings → Plugins** and choose **Add marketplace**.
-2. Enter `https://github.com/Peliqan-io/skills`.
-3. Install the **peliqan** plugin from that marketplace.
-
-One plugin gives you every skill plus the Peliqan MCP server. The first time a skill uses the Peliqan MCP, you sign in with your own Peliqan account. Updates arrive through the same marketplace.
-
-### Claude Code: the same marketplace from the terminal
-
-```
-/plugin marketplace add Peliqan-io/skills
-```
-
-```
-/plugin install peliqan@peliqan
-```
-
-Send these as two separate prompts. The skills are then available as `/peliqan:peliqan-sync`, `/peliqan:peliqan-dashboard`, `/peliqan:peliqan-audit`, `/peliqan:peliqan-support` and `/peliqan:peliqan-help`.
-
-### Without the plugin
-
-Only if plugins aren't available to you. Install every skill: audit and support read the rules inside the build skills.
-
-- **Claude Code:**
-  ```bash
-  git clone https://github.com/Peliqan-io/skills.git peliqan-skills
-  mkdir -p ~/.claude/skills
-  cp -R peliqan-skills/skills/* ~/.claude/skills/
-  claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp
-  ```
-- **Claude app:** zip each folder under `skills/` separately (each zip must contain its skill folder), upload them under **Settings → Capabilities → Skills**, and add `https://mcp.eu.peliqan.io/mcp` as a custom connector.
 
 ## Repository layout
 
