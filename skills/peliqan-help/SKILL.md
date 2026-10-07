@@ -1,11 +1,11 @@
 ---
 name: peliqan-help
-description: "Quick-reference card for all Peliqan skills and how to call them. One-shot display. Trigger: /peliqan-help, 'peliqan help', 'what peliqan skills are there', 'how do I use the peliqan skills'."
+description: "Shows which Peliqan skills exist, what each one does and whether it writes to your Peliqan account. Use when someone asks what the Peliqan skills can do, which one to use, or how to call them: 'peliqan help', 'what peliqan skills are there', 'how do I use the peliqan skills', '/peliqan-help'."
 ---
 
 # Peliqan Help
 
-Display this reference card when invoked. One-shot: do not call any tools.
+Show the overview below as-is. It needs no tool calls and no account access.
 
 ## Skills
 
@@ -16,7 +16,7 @@ Display this reference card when invoked. One-shot: do not call any tools.
 | **peliqan-support** | `/peliqan-support` | **Support.** Something is broken anywhere in your account (a sync, pipeline, data app, endpoint, table): finds the root cause from the logs and data and proposes a fix. | Only after your explicit go-ahead |
 | **peliqan-help** | `/peliqan-help` | This card. | No |
 
-In Claude Code, when installed as a plugin, the skills are namespaced:
+Installed as the Claude Code plugin, the commands carry the plugin name:
 `/peliqan:peliqan-sync`, `/peliqan:peliqan-support`, and so on.
 
 You don't have to call a skill by name. Describe what you want and Claude picks
