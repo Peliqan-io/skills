@@ -13,7 +13,7 @@
   <!-- Boxes -->
   <rect x="40" y="90" width="170" height="64" rx="6" fill="#FCEFE3" stroke="#ED7D2B" stroke-width="1.5"/>
   <text x="125" y="116" fill="#383838" font-size="13px" font-weight="bold" text-anchor="middle">Build</text>
-  <text x="125" y="135" fill="#6B6B6B" font-size="10px" text-anchor="middle">per product, e.g. peliqan-sync</text>
+  <text x="125" y="135" fill="#6B6B6B" font-size="10px" text-anchor="middle">per framework, e.g. peliqan-sync</text>
 
   <rect x="290" y="90" width="170" height="64" rx="6" fill="#FCEFE3" stroke="#ED7D2B" stroke-width="1.5"/>
   <text x="375" y="116" fill="#383838" font-size="13px" font-weight="bold" text-anchor="middle">Audit</text>

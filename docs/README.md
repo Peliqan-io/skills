@@ -1,29 +1,29 @@
 # Documentation
 
-One folder per product. The [root README](../README.md) is the front door and only links here.
+One folder per framework. The [root README](../README.md) is the front door and only links here.
 
-| Product | Docs | Build skill |
+| Framework | Docs | Build skill |
 |---|---|---|
 | Syncs | [syncs/](syncs/README.md) | `peliqan-sync` |
 | Dashboards | [dashboards/](dashboards/README.md) | `peliqan-dashboard` |
 
-## Adding a product
+## Adding a framework
 
-Adding a product takes four things:
+Adding a framework takes four things:
 
-1. **A build skill:** `skills/peliqan-<product>/`.
-2. **A reference file in audit and in support:** `skills/peliqan-audit/references/<product>.md` and `skills/peliqan-support/references/<product>.md`, plus a row in the routing table of each `SKILL.md`.
-3. **A docs folder:** `docs/<product>/README.md`, with images in `docs/<product>/images/`.
-4. **One row** in the products table of the root README, one in the table above, and the new skill in `skills/peliqan-help/SKILL.md`.
+1. **A build skill:** `skills/peliqan-<framework>/`.
+2. **A reference file in audit and in support:** `skills/peliqan-audit/references/<framework>.md` and `skills/peliqan-support/references/<framework>.md`, plus a row in the routing table of each `SKILL.md`.
+3. **A docs folder:** `docs/<framework>/README.md`, with images in `docs/<framework>/images/`.
+4. **One row** in the frameworks table of the root README, one in the table above, and the new skill in `skills/peliqan-help/SKILL.md`.
 
 ## Page structure
 
-Every `docs/<product>/README.md` uses the same sections, so readers who know one product find their way in the next:
+Every `docs/<framework>/README.md` uses the same sections, so readers who know one framework find their way in the next:
 
 1. **What it is**: one diagram plus the principles.
 2. **When to use it**: good fit, better alternatives, before / after.
 3. **How it works**: the mechanism, with one diagram.
-4. **Using the skills**: what you need, then build, audit and support, plus product-specific safety rules.
+4. **Using the skills**: what you need, then build, audit and support, plus framework-specific safety rules.
 
 Deeper material (requirements, risks, QA) goes in a separate page in the same folder.
 
