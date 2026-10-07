@@ -62,14 +62,9 @@ Want to know why you can trust it: requirements, risks and guards, QA? Read the 
 
 The skill builds **sync workers**: Peliqan data apps that read from your data warehouse and write records into a business system, such as creating a sales order in your ERP for each new webshop order. The warehouse sits in the middle, so the worker reads clean tables and keeps all its state next to your data:
 
-```mermaid
-flowchart LR
-    A[System A<br/>e.g. webshop] -- "connector" --> DWH[(Peliqan<br/>data warehouse)]
-    B[System B<br/>e.g. ERP] -- "connector" --> DWH
-    DWH -- "sync worker" --> B
-    DWH -- "sync worker" --> A
-    DWH --> R[Reporting, dashboards,<br/>APIs, AI]
-```
+<p align="center">
+  <img src="docs/images/warehouse-hub.svg" width="900" alt="Connectors load data from system A and system B into the Peliqan data warehouse, which also holds the worker state (link table, run log, monitor views). The sync worker reads changes from the warehouse and writes back to system A or B.">
+</p>
 
 Every worker the skill generates follows these principles:
 
@@ -181,15 +176,9 @@ Adding a sync is real development work, typically about three functions of code.
 
 A sync isn't finished when it's deployed. The other two skills cover the rest of its life:
 
-```mermaid
-flowchart LR
-    B["Build<br/>peliqan-sync"] --> A["Audit<br/>peliqan-audit"]
-    A -- "ready" --> L(["Live"])
-    A -- "fixes needed" --> B
-    L -- "periodic check" --> A
-    L -- "something breaks" --> S["Support<br/>peliqan-support"]
-    S -- "fix" --> B
-```
+<p align="center">
+  <img src="docs/images/lifecycle.svg" width="900" alt="Build with peliqan-sync, audit with peliqan-audit, then live. Audit sends fixes back to build; live is audited periodically or after a change; when something breaks, peliqan-support finds the root cause and the fix goes back through the build skill.">
+</p>
 
 ### Audit: is it ready?
 

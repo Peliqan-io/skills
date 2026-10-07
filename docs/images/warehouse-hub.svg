@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" width="1000" height="380" font-family="DejaVu Sans, Verdana, Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="999" height="379" rx="10" fill="#FFFFFF" stroke="#E3E3E3"/>
+
+  <!-- Systems -->
+  <rect x="30" y="64" width="200" height="66" rx="6" fill="#EEF0F3" stroke="#C5CAD1" stroke-width="1.5"/>
+  <text x="130" y="92" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">System A</text>
+  <text x="130" y="111" fill="#666" font-size="10px" text-anchor="middle">e.g. webshop</text>
+
+  <rect x="770" y="64" width="200" height="66" rx="6" fill="#EEF0F3" stroke="#C5CAD1" stroke-width="1.5"/>
+  <text x="870" y="92" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">System B</text>
+  <text x="870" y="111" fill="#666" font-size="10px" text-anchor="middle">e.g. ERP</text>
+
+  <!-- Warehouse -->
+  <text x="330" y="30" fill="#2F3B4C" font-size="12px" font-weight="bold">PELIQAN DATA WAREHOUSE</text>
+  <rect x="330" y="40" width="340" height="150" rx="8" fill="#FFFFFF" stroke="#333" stroke-width="1.5"/>
+  <rect x="350" y="58" width="300" height="52" rx="5" fill="#FFFFFF" stroke="#333" stroke-width="1"/>
+  <text x="500" y="80" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">Your data</text>
+  <text x="500" y="97" fill="#666" font-size="10px" text-anchor="middle">tables loaded from both systems</text>
+  <rect x="350" y="122" width="300" height="52" rx="5" fill="#FFFFFF" stroke="#333" stroke-width="1"/>
+  <text x="500" y="144" fill="#333" font-size="12px" font-weight="bold" text-anchor="middle">Worker state</text>
+  <text x="500" y="161" fill="#666" font-size="10px" text-anchor="middle">link table · run log · monitor views</text>
+
+  <!-- Connectors in -->
+  <path d="M230,84 H326" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="278" y="76" fill="#555" font-size="10px" text-anchor="middle">connector</text>
+  <text x="278" y="100" fill="#999" font-size="9px" text-anchor="middle">loads data</text>
+  <path d="M770,84 H674" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="722" y="76" fill="#555" font-size="10px" text-anchor="middle">connector</text>
+  <text x="722" y="100" fill="#999" font-size="9px" text-anchor="middle">loads data</text>
+
+  <!-- Worker -->
+  <rect x="390" y="238" width="220" height="58" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="500" y="262" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">Sync worker</text>
+  <text x="500" y="280" fill="#666" font-size="10px" text-anchor="middle">one data app per system pair</text>
+  <path d="M500,194 V234" stroke="#333" stroke-width="1.5" marker-start="url(#ah)" marker-end="url(#ah)"/>
+  <text x="510" y="218" fill="#555" font-size="10px">reads changes · keeps state</text>
+
+  <!-- Writeback -->
+  <path d="M610,267 H870 V134" stroke="#E07B39" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
+  <text x="740" y="259" fill="#D0652A" font-size="10px" text-anchor="middle">writes back</text>
+  <path d="M390,267 H130 V134" stroke="#E07B39" stroke-width="1.8" fill="none" marker-end="url(#ah)"/>
+  <text x="260" y="259" fill="#D0652A" font-size="10px" text-anchor="middle">writes back (other direction)</text>
+
+  <text x="500" y="322" fill="#555" font-size="10px" text-anchor="middle">The same warehouse data also feeds reporting, dashboards, APIs and AI.</text>
+
+  <!-- Legend -->
+  <path d="M30,338 H970" stroke="#E3E3E3"/>
+  <rect x="30" y="352" width="12" height="12" rx="2" fill="#FDEEE2" stroke="#E07B39"/><text x="50" y="362" fill="#555" font-size="10px">runs in Peliqan (data app)</text>
+  <rect x="260" y="352" width="12" height="12" rx="2" fill="#FFFFFF" stroke="#333"/><text x="280" y="362" fill="#555" font-size="10px">data in the warehouse</text>
+  <rect x="470" y="352" width="12" height="12" rx="2" fill="#EEF0F3" stroke="#C5CAD1"/><text x="490" y="362" fill="#555" font-size="10px">external system</text>
+  <path d="M640,358 H672" stroke="#E07B39" stroke-width="1.8"/><text x="680" y="362" fill="#555" font-size="10px">writeback (reverse ETL)</text>
+</svg>

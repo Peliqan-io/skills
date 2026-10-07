@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300" width="1000" height="300" font-family="DejaVu Sans, Verdana, Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#E07B39"/>
+    </marker>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="999" height="299" rx="10" fill="#FFFFFF" stroke="#E3E3E3"/>
+
+  <!-- Boxes -->
+  <rect x="40" y="90" width="170" height="64" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="125" y="116" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">Build</text>
+  <text x="125" y="135" fill="#666" font-size="10px" text-anchor="middle">peliqan-sync</text>
+
+  <rect x="290" y="90" width="170" height="64" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="375" y="116" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">Audit</text>
+  <text x="375" y="135" fill="#666" font-size="10px" text-anchor="middle">peliqan-audit · read-only</text>
+
+  <rect x="540" y="90" width="170" height="64" rx="6" fill="#FFFFFF" stroke="#333" stroke-width="1.5"/>
+  <text x="625" y="116" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">Live</text>
+  <text x="625" y="135" fill="#666" font-size="10px" text-anchor="middle">scheduled in your account</text>
+
+  <rect x="790" y="90" width="170" height="64" rx="6" fill="#FDEEE2" stroke="#E07B39" stroke-width="1.5"/>
+  <text x="875" y="116" fill="#333" font-size="13px" font-weight="bold" text-anchor="middle">Support</text>
+  <text x="875" y="135" fill="#666" font-size="10px" text-anchor="middle">peliqan-support</text>
+
+  <!-- Forward -->
+  <path d="M210,122 H286" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M460,122 H536" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="498" y="114" fill="#555" font-size="10px" text-anchor="middle">ready</text>
+  <path d="M710,122 H786" stroke="#333" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="748" y="114" fill="#555" font-size="10px" text-anchor="middle">something</text>
+  <text x="748" y="142" fill="#555" font-size="10px" text-anchor="middle">breaks</text>
+
+  <!-- Periodic check -->
+  <path d="M625,90 V52 H375 V86" stroke="#333" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#ah)"/>
+  <text x="500" y="44" fill="#555" font-size="10px" text-anchor="middle">periodic check, or after a change</text>
+
+  <!-- Back to build -->
+  <path d="M375,154 V190 H160 V158" stroke="#E07B39" stroke-width="1.5" fill="none" marker-end="url(#ao)"/>
+  <text x="268" y="206" fill="#D0652A" font-size="10px" text-anchor="middle">fixes needed</text>
+  <path d="M875,154 V236 H90 V158" stroke="#E07B39" stroke-width="1.5" fill="none" marker-end="url(#ao)"/>
+  <text x="480" y="252" fill="#D0652A" font-size="10px" text-anchor="middle">root cause found → fix goes through the build skill, after your go-ahead</text>
+
+  <!-- Legend -->
+  <path d="M30,268 H970" stroke="#E3E3E3"/>
+  <rect x="30" y="278" width="12" height="12" rx="2" fill="#FDEEE2" stroke="#E07B39"/><text x="50" y="288" fill="#555" font-size="10px">skill</text>
+  <rect x="140" y="278" width="12" height="12" rx="2" fill="#FFFFFF" stroke="#333"/><text x="160" y="288" fill="#555" font-size="10px">running in your account</text>
+  <path d="M340,284 H372" stroke="#E07B39" stroke-width="1.5"/><text x="380" y="288" fill="#555" font-size="10px">back to build</text>
+  <path d="M500,284 H532" stroke="#333" stroke-width="1.5" stroke-dasharray="5 4"/><text x="540" y="288" fill="#555" font-size="10px">recurring</text>
+</svg>
