@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "peliqan",
-  "description": "Peliqan skills for Claude: build, audit and support sync workers on your Peliqan account.",
+  "description": "Peliqan skills for Claude: build, audit and support syncs and dashboards on your Peliqan account.",
   "owner": {
     "name": "Peliqan",
     "url": "https://peliqan.io"
@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "peliqan",
-      "description": "Build, audit and support Peliqan Reverse-ETL sync workers, with the Peliqan MCP server included.",
+      "description": "Build, audit and support Peliqan syncs and dashboards, with the Peliqan MCP server included.",
       "source": "./",
       "category": "productivity"
     }

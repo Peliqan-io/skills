@@ -1,11 +1,11 @@
 {
   "name": "peliqan",
   "version": "1.1.0",
-  "description": "Build, audit and support Peliqan Reverse-ETL sync workers with Claude, on the framework the Peliqan team runs in production.",
+  "description": "Build, audit and support Peliqan syncs and dashboards with Claude, on the patterns the Peliqan team runs in production.",
   "author": {
     "name": "Peliqan",
     "url": "https://peliqan.io"
   },
   "homepage": "https://github.com/Peliqan-io/skills",
-  "keywords": ["peliqan", "sync", "reverse-etl", "data-warehouse"]
+  "keywords": ["peliqan", "sync", "reverse-etl", "data-warehouse", "dashboards", "medallion", "power-bi"]
 }
