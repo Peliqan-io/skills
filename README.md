@@ -7,219 +7,55 @@
   </a>
 </p>
 
-<h1 align="center">Peliqan Skills for Claude</h1>
+<h1 align="center">Peliqan Skills</h1>
 
 <p align="center">
-  The sync framework Peliqan runs in production, as Claude skills.<br>
-  <sub>Claude builds, audits and supports the syncs on your own Peliqan account.</sub>
+  <em>Describe what you need. Claude builds it on your Peliqan account, checks it, and helps when something breaks.</em>
 </p>
 
 <p align="center">
   <a href="https://peliqan.io"><img src="https://img.shields.io/badge/Peliqan-data%20platform-ED7D2B?style=flat&labelColor=383838" alt="Peliqan data platform"></a>
   <img src="https://img.shields.io/badge/Claude-Code%20%7C%20claude.ai-ED7D2B?style=flat&labelColor=383838" alt="Works with Claude Code and claude.ai">
   <img src="https://img.shields.io/badge/MCP-mcp.eu.peliqan.io-ED7D2B?style=flat&labelColor=383838" alt="Peliqan MCP server">
-  <img src="https://img.shields.io/badge/verified-Shopify%20%C2%B7%20Odoo-ED7D2B?style=flat&labelColor=383838" alt="Verified in production: Shopify and Odoo">
 </p>
 
 <p align="center">
   <strong>Build &middot; Audit &middot; Support</strong><br>
-  <sub>One worker per system pair &middot; no duplicates &middot; nothing lost silently &middot; code you own</sub>
+  <sub>The same patterns our own team uses in production, packaged as skills for Claude</sub>
 </p>
 
 ---
 
-### In practice
+Peliqan Skills teach Claude how to work on your [Peliqan](https://peliqan.io) account the way we do. Claude talks to your account through the Peliqan MCP server: it inspects connections and tables, builds and deploys, and reads run logs. Anything that writes to your account waits for your go-ahead.
 
-You want every new webshop order to show up in your ERP as a sales order.
+## Products
 
-**Without the skill:** someone writes API calls, invents their own way to remember what was already sent, finds the duplicates a week later and wonders why three orders never arrived.
+| Product | What you get | Docs |
+|---|---|---|
+| **Syncs** | Keep two systems in sync (orders, stock, customers…), API to API or to and from your warehouse. One worker per system pair, no duplicates, nothing lost silently, code you own. | [docs/syncs](docs/syncs/README.md) |
 
-**With the skill:**
-
-> Add an order sync from the webshop to the ERP: sales order with order lines, customer as contact.
-
-Claude inspects your account, writes the sync on the framework our own team uses for customers, tests it offline, deploys it, runs a limited test and proves on a second run that nothing gets written twice. Every order it touches is traceable in your Peliqan warehouse.
+More products will be added the same way, each with its own build skill and docs.
 
 ## Skills
 
 | Skill | Command | What it does |
 |---|---|---|
-| [`peliqan-sync`](skills/peliqan-sync) | `/peliqan:peliqan-sync` | **Build.** Sets up a sync worker between two business systems (for example a webshop and an ERP) as one Peliqan data app, or adds a sync (orders, stock, customers, fulfilment, refunds…) to a worker you already have. |
-| [`peliqan-audit`](skills/peliqan-audit) | `/peliqan:peliqan-audit` | **Audit.** Checks something that looks healthy against its rules and run history, before go-live or after a change. Today: sync workers. Returns a pass/warn/fail scorecard and a ranked fix list. Read-only. |
-| [`peliqan-support`](skills/peliqan-support) | `/peliqan:peliqan-support` | **Support.** Something is broken anywhere in your account: a sync, a pipeline, a data app, an API endpoint, a stale table. Finds the root cause from the logs and data and proposes a fix. Changes nothing without your go-ahead. |
+| [`peliqan-sync`](skills/peliqan-sync) | `/peliqan:peliqan-sync` | **Build** a sync worker for a system pair, or add a sync to an existing one. Tests, deploys and verifies it. |
+| [`peliqan-audit`](skills/peliqan-audit) | `/peliqan:peliqan-audit` | **Audit** something that looks healthy, before go-live or after a change. Returns a pass/warn/fail scorecard and a ranked fix list. Read-only. |
+| [`peliqan-support`](skills/peliqan-support) | `/peliqan:peliqan-support` | **Support** when something is broken anywhere in your account: a sync, a pipeline, a data app, an API endpoint, a stale table. Finds the root cause and proposes a fix. Changes nothing without your go-ahead. |
 | [`peliqan-help`](skills/peliqan-help) | `/peliqan:peliqan-help` | Quick reference for all of the above. |
 
-One install gives you all four. The commands above are the plugin form; with a manual install or on claude.ai they are `/peliqan-sync` and so on. You don't have to remember them either: describe what you want ("is our order sync ready to go live?", "orders stopped arriving in the ERP") and Claude picks the right skill.
+One install gives you all of them. The commands above are the plugin form; with a manual install or on claude.ai they are `/peliqan-sync` and so on. You don't have to remember them either: describe what you want ("is our order sync ready to go live?", "the pipeline failed last night") and Claude picks the right skill.
 
-More skills will be added here over time.
+## How they fit together
 
-Want to know why you can trust it: requirements, risks and guards, QA? Read the [technical overview](docs/technical-overview.md).
-
-**On this page**
-
-1. [What the skills build](#1-what-the-skills-build)
-2. [How a sync worker works](#2-how-a-sync-worker-works)
-3. [Building a sync](#3-building-a-sync)
-4. [Auditing and support](#4-auditing-and-support)
-5. [Installation](#5-installation)
-6. [Repository layout](#6-repository-layout)
-
----
-
-## 1. What the skills build
-
-The skills build **sync workers**: Peliqan data apps that read from your data warehouse and write records into a business system, such as creating a sales order in your ERP for each new webshop order. The warehouse sits in the middle, so the worker reads clean tables and keeps all its state next to your data:
-
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#FCEFE3', 'primaryBorderColor': '#ED7D2B', 'primaryTextColor': '#383838', 'lineColor': '#383838', 'fontFamily': 'Roboto, Helvetica, Arial, sans-serif'}}}%%
-flowchart LR
-    A[System A<br/>e.g. webshop] -- "connector" --> DWH[(Peliqan<br/>data warehouse)]
-    B[System B<br/>e.g. ERP] -- "connector" --> DWH
-    DWH -- "sync worker" --> B
-    DWH -- "sync worker" --> A
-    DWH --> R[Reporting, dashboards,<br/>APIs, AI]
-```
-
-Every worker the skill generates follows these principles:
-
-| Principle | What it means for you |
-|---|---|
-| **The warehouse is the hub** | All data and all sync state live in one place. The same data feeds your syncs, your reporting and your APIs. |
-| **Every write is traceable** | Each record written to a target is logged in a *link table*: which source record, which target record, when, and with what result. You can always answer "where did this order go?" with SQL. |
-| **Idempotent by design** | Running a sync twice never creates duplicates. A record is only rewritten when the fields it owns have actually changed. |
-| **Nothing gets lost silently** | Incremental reads use safe bookmarks, a read that fails stops the sync loudly instead of looking empty, and every failed record keeps its error and a copy of the source record until it is replayed or parked in a dead-letter view. |
-| **One record never stops the run** | An error on one order is recorded and the run carries on with the next one. |
-| **You own the code** | A worker is one readable Python script in your own account, not a black box. You can review, change and extend it. |
-
----
-
-## 2. How a sync worker works
-
-A **worker** is one Peliqan data app per system pair (for example webshop ⇄ ERP). It contains a shared framework and one or more **syncs**. Each sync moves one kind of object in one direction.
-
-On every run, each sync:
-
-1. **Reads only what changed** since its last bookmark.
-2. For each record:
-   1. **Validates** the source record.
-   2. **Looks up** in the link table whether it already exists in the target (update) or not (create).
-   3. **Maps** the fields and computes a fingerprint (hash) of the fields this sync owns. If nothing changed, it **skips** the record.
-   4. **Writes** to the target system.
-   5. **Checks the response**, including errors that some APIs hide inside a "successful" reply.
-   6. **Logs the outcome** in the link table: `ok`, or an error status with the details.
-3. **Moves the bookmark forward**, but only past records that were actually processed.
+Every product follows the same lifecycle. Each product has its own build skill; audit and support are shared and know every product.
 
 <p align="center">
-  <img src="docs/images/sync-run.svg" width="900" alt="One run of a sync worker: the enabled syncs run in registry order; each record goes through source, lookup, map and hash, writeback, response and link row; failures are recorded in the link table as source_error or target_error and replayed once the cause is fixed; the link table holds sync_name, both ids, a hash per direction, the source JSON, action, status and attempt.">
+  <img src="docs/images/lifecycle.svg" width="900" alt="Build with the product's build skill, audit with peliqan-audit, then live. Audit sends fixes back to build; live is audited periodically or after a change; when something breaks, peliqan-support finds the root cause and the fix goes back through the build skill.">
 </p>
 
-A record that fails keeps its error and a copy of the source record in the link table. It is tried again when it changes in the source, or replayed from that copy once the cause is fixed. After a set number of failed attempts it is marked `dead` and shows up in the dead-letter view for someone to look at.
-
-At the end of every run the worker prints a summary per sync (status, duration, processed, errors, skipped) and, for every bookmark, whether it moved.
-
-Each worker creates these objects in your warehouse:
-
-| Object | Use it to |
-|---|---|
-| `link_<pair>` | Look up any source record and see which target record it became, and the history of every write |
-| `runs_<pair>` | See every run: when, which sync, how many records were processed, skipped or failed |
-| `v_dead_letter_<pair>` | List the records that need human attention |
-| `v_run_summary_<pair>` | Get a quick health overview per sync |
-
----
-
-## 3. Building a sync
-
-The `peliqan-sync` skill teaches Claude how to build these workers the way we build them for customers. It includes the framework contract, a worker template, verified notes per system and an offline test. Claude talks to your account through the **Peliqan MCP server**, so it can inspect your connections and tables, deploy the data app and read the run logs.
-
-### What you need
-
-- A Peliqan account with a **connection for both systems** (for example your webshop and your ERP), with their data loaded into the warehouse.
-- **Claude** (Claude Code, or claude.ai / Claude Desktop) with these skills installed (see [Installation](#5-installation)).
-- The **Peliqan MCP server** connected to Claude: `https://mcp.eu.peliqan.io/mcp`. You sign in with your own Peliqan account the first time it's used.
-
-### Two ways to use it
-
-**1. Set up a worker for a new system pair**
-
-> Build a sync worker between our webshop and our ERP.
-
-Claude checks your account for existing workers, connections and tables, then builds an *empty* worker that contains only the framework, ready for syncs.
-
-**2. Add a sync to an existing worker**
-
-> Add an order sync from the webshop to the ERP: sales order with order lines, customer as contact.
-
-Claude adds that one sync to your existing worker.
-
-You can also ask for both at once ("set up the product and order sync between the webshop and the ERP"). Claude will then ask which syncs you want and how to run the first test safely. You can also call the skill explicitly with `/peliqan:peliqan-sync`.
-
-### What Claude does, step by step
-
-1. **Inspects your account** first: connection names, existing data apps, the warehouse schema and a few sample rows. That answers most questions before it asks you anything.
-2. **Probes the target system** for the modules and fields a sync depends on, so it doesn't build a sync on a field that doesn't exist.
-3. **Asks for the sync specification**: direction, field mapping, which system owns which fields, dependencies. You can paste a row from your requirements matrix.
-4. **Writes and tests the code locally**: a compile check, a lint check, the bookmark test and a simulated run against fake systems, before anything touches your data.
-5. **Deploys the data app** to your account and verifies that what's deployed matches what was tested.
-6. **Runs a limited first test** (`TEST_LIMIT`, one sync at a time through `SYNCS_ENABLED`) and reads the logs.
-7. **Runs a second time to prove idempotence**: no new writes, only "no change, skip".
-8. **Hands over** with a list of the design decisions taken (taxes, draft vs. confirmed, variants, locations…) for you to review.
-
-Scheduling the worker and lifting the test limit stay **your decision**. Claude doesn't do that for you.
-
-### Supported systems
-
-| System | Status |
-|---|---|
-| Shopify | Verified in production |
-| Odoo | Verified in production |
-| Other systems (Salesforce, SAP, Klaviyo, …) | Supported through a checklist. Claude works through it with you and records the answers in a new system file before building. It never guesses how an API behaves. |
-
-### Safety rules built into the skill
-
-- **A run is a write.** Claude never runs a worker against a live target just to see what happens. It tests with a record limit, a sandbox copy or by reading the link table.
-- **Test with realistic data.** A dummy order without discounts, shipping or deviating taxes doesn't test those mappings, so the skill seeds proper test records first.
-- **Sandbox = a separate copy.** A test copy of a worker gets its own link table and bookmarks, so it can never duplicate records into your live system.
-- **Nothing is deleted** unless you ask for it explicitly.
-
-### What to expect
-
-Adding a sync is real development work, typically about three functions of code. It is not a configuration toggle. What the skill gives you is that every sync automatically gets duplicate protection, change detection, error logging, replay and safe bookmarks, so the effort goes into your business logic instead of plumbing.
-
----
-
-## 4. Auditing and support
-
-A sync isn't finished when it's deployed. The other two skills cover the rest of its life:
-
-```mermaid
-%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#FCEFE3', 'primaryBorderColor': '#ED7D2B', 'primaryTextColor': '#383838', 'lineColor': '#383838', 'fontFamily': 'Roboto, Helvetica, Arial, sans-serif'}}}%%
-flowchart LR
-    B["Build<br/>peliqan-sync"] --> A["Audit<br/>peliqan-audit"]
-    A -- "ready" --> L(["Live"])
-    A -- "fixes needed" --> B
-    L -- "periodic check" --> A
-    L -- "something breaks" --> S["Support<br/>peliqan-support"]
-    S -- "fix" --> B
-```
-
-### Audit: is it ready?
-
-> Audit our order sync. Can we go live?
-
-Claude reads the worker's code, configuration and recent runs, and scores them against the framework rules: safe bookmarks, duplicate protection, error handling, leftover test settings, growing error counts, duplicates in the link table. You get a verdict (**ready**, **ready with warnings**, **not ready**), a scorecard with evidence for every check and a fix list ranked by impact. The audit never changes anything.
-
-### Support: what broke?
-
-> Orders stopped arriving in the ERP since Tuesday.
-
-Claude finds the worker, compares the last good run with the first bad one, queries the link table for the affected records and matches the symptom to a known cause. You get the evidence, the root cause and a concrete fix. Replaying records, rewinding a bookmark or redeploying only happens after you say yes.
-
-Support isn't limited to syncs. A failed pipeline run, a crashing data app, an erroring API endpoint or a stale table goes through the same skill: it works out which object is at fault, and whether the problem is upstream, from the runs, logs and lineage.
-
----
-
-## 5. Installation
+## Installation
 
 ### Claude Code (recommended)
 
@@ -247,38 +83,27 @@ claude mcp add --transport http peliqan https://mcp.eu.peliqan.io/mcp
 ### claude.ai / Claude Desktop
 
 1. Download this repository and zip each folder under `skills/` separately (each zip must contain its skill folder).
-2. Go to **Settings → Capabilities → Skills** and upload the zips. Upload all of them: audit and support read the framework rules inside `peliqan-sync`.
+2. Go to **Settings → Capabilities → Skills** and upload the zips. Upload all of them: audit and support read the rules inside the build skills.
 3. Add the Peliqan MCP server as a custom connector: `https://mcp.eu.peliqan.io/mcp`.
 
----
-
-## 6. Repository layout
+## Repository layout
 
 ```
-.claude-plugin/                      # plugin manifest: one install for everything
-.mcp.json                            # bundles the Peliqan MCP server
-docs/technical-overview.md           # requirements, risks and guards, QA
-docs/images/                         # logo and diagrams
+.claude-plugin/              # plugin manifest: one install for everything
+.mcp.json                    # bundles the Peliqan MCP server
+docs/
+├── README.md                # how the docs are organised, diagram style
+├── images/                  # logo and shared diagrams
+└── syncs/                   # one folder per product
 skills/
-├── peliqan-help/SKILL.md            # quick reference
-├── peliqan-audit/                   # audit: SKILL.md + references/<domain>.md
-├── peliqan-support/                 # support: SKILL.md + references/<domain>.md
-└── peliqan-sync/
-    ├── SKILL.md                     # entry point: when and how Claude uses the skill
-    ├── references/
-    │   ├── framework-contract.md    # the rules every worker and sync follows
-    │   ├── worker-build.md          # workflow: set up a worker for a system pair
-    │   ├── sync-build.md            # workflow: add one sync to a worker
-    │   └── systems/                 # verified notes per system + checklist for new ones
-    ├── assets/
-    │   ├── worker_template.py       # the framework (v5)
-    │   └── sync_examples/           # reference syncs from a live worker
-    └── scripts/
-        └── test_bookmarks.py        # offline test of the bookmark rules
+├── peliqan-help/            # quick reference
+├── peliqan-audit/           # SKILL.md + references/<product>.md
+├── peliqan-support/         # SKILL.md + references/<product>.md
+└── peliqan-sync/            # build skill for syncs: framework, template, system notes, tests
 ```
 
 ---
 
 <p align="center">
-  <sub>Built and maintained by the <a href="https://peliqan.io">Peliqan</a> team. Questions, or help with your first sync: ask your Peliqan contact, or reach us through <a href="https://peliqan.io">peliqan.io</a>.</sub>
+  <sub>Built and maintained by the <a href="https://peliqan.io">Peliqan</a> team. Questions, or help getting started: ask your Peliqan contact, or reach us through <a href="https://peliqan.io">peliqan.io</a>.</sub>
 </p>

@@ -31,7 +31,7 @@
   <rect x="272" y="62" width="520" height="340" rx="10" fill="#FFFFFF" stroke="#ED7D2B" stroke-width="2"/>
 
   <rect x="290" y="88" width="108" height="66" rx="6" fill="#FCEFE3" stroke="#ED7D2B" stroke-width="1.5"/>
-  <text x="344" y="110" fill="#383838" font-size="12px" font-weight="bold" text-anchor="middle">1 Source</text><text x="344" y="126" fill="#6B6B6B" font-size="10px" text-anchor="middle">changed since</text><text x="344" y="139" fill="#6B6B6B" font-size="10px" text-anchor="middle">bookmark · validate</text>
+  <text x="344" y="110" fill="#383838" font-size="12px" font-weight="bold" text-anchor="middle">1 Source</text><text x="344" y="126" fill="#6B6B6B" font-size="10px" text-anchor="middle">via API, changed</text><text x="344" y="139" fill="#6B6B6B" font-size="10px" text-anchor="middle">since bookmark · validate</text>
 
   <rect x="414" y="88" width="108" height="66" rx="6" fill="#FCEFE3" stroke="#ED7D2B" stroke-width="1.5"/>
   <text x="468" y="110" fill="#383838" font-size="12px" font-weight="bold" text-anchor="middle">2 Lookup</text><text x="468" y="126" fill="#6B6B6B" font-size="10px" text-anchor="middle">link row:</text><text x="468" y="139" fill="#6B6B6B" font-size="10px" text-anchor="middle">create or update?</text>
