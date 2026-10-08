@@ -15,7 +15,7 @@ Whatever the setup, install every skill and connect the Peliqan MCP server. Audi
 /plugin install peliqan@peliqan
 ```
 
-The plugin bundles every skill and the Peliqan MCP server. Its commands carry the plugin name: `/peliqan:peliqan-sync`, `/peliqan:peliqan-dashboard`, `/peliqan:peliqan-audit`, `/peliqan:peliqan-support` and `/peliqan:peliqan-help`.
+The plugin bundles every skill and the Peliqan MCP server. Its commands carry the plugin name: `/peliqan:peliqan-sync`, `/peliqan:peliqan-dashboard`, `/peliqan:peliqan-audit`, `/peliqan:peliqan-support`, `/peliqan:peliqan-connection-health` and `/peliqan:peliqan-help`.
 
 ## Claude Code without the plugin
 

@@ -1,6 +1,6 @@
 ---
 name: peliqan-audit
-description: "Audits something in a Peliqan account that looks healthy — before go-live, after a change, or as a periodic check — and returns a pass/warn/fail scorecard with evidence and a ranked fix list. For sync workers it checks the framework contract (version, >= bookmarks, catalog-registered link tables, hash coverage, the 6-step record path, data-loss guards), leftover test settings, and runtime health (error and dead counts, stuck bookmarks, duplicates). For dashboards it checks the medallion layers (business rules only in Gold, consumer layer a passthrough, dashboard reading only the consumer layer), correctness against the PBIX/DAX where available, presentation, freshness and load time. Use when someone asks to 'audit the sync', 'review our worker', 'is this production-ready', 'can we go live', 'validate the order sync', 'check the dashboard', 'does the dashboard match Power BI', 'health check', or '/peliqan-audit'. Read-only: it never deploys, runs, rewinds or replays. For something already broken, use peliqan-support; to apply fixes, the build skill (peliqan-sync for syncs, peliqan-dashboard for dashboards)."
+description: "Audits something in a Peliqan account that looks healthy — before go-live, after a change, or as a periodic check — and returns a pass/warn/fail scorecard with evidence and a ranked fix list. For sync workers it checks the framework contract (version, >= bookmarks, catalog-registered link tables, hash coverage, the 6-step record path, data-loss guards), leftover test settings, and runtime health (error and dead counts, stuck bookmarks, duplicates). For dashboards it checks the medallion layers (business rules only in Gold, consumer layer a passthrough, dashboard reading only the consumer layer), correctness against the PBIX/DAX where available, presentation, freshness and load time. Use when someone asks to 'audit the sync', 'review our worker', 'is this production-ready', 'can we go live', 'validate the order sync', 'check the dashboard', 'does the dashboard match Power BI', 'health check' of a sync or dashboard, or '/peliqan-audit'. Read-only: it never deploys, runs, rewinds or replays. For the health of all connections in an account or its sub-accounts, use peliqan-connection-health. For something already broken, use peliqan-support; to apply fixes, the build skill (peliqan-sync for syncs, peliqan-dashboard for dashboards)."
 ---
 
 # Peliqan Audit
@@ -12,6 +12,9 @@ that haven't surfaced. Domain-specific checks live in `references/`:
 |---|---|
 | A sync worker | `references/sync.md` |
 | A dashboard and its medallion layers | `references/dashboard.md` |
+
+A health check of connections (are they running, is their data right) is not
+an audit: it runs through `peliqan-connection-health`.
 
 Paths inside a reference file are relative to that file. If the user asks to
 audit something with no reference file yet, say so: do a careful read-only
