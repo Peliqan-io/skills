@@ -45,7 +45,7 @@ No plugins, the MCP server by hand, or checking that it works: see [INSTALL.md](
 
 ## Skills <img src="https://img.shields.io/badge/beta-ED7D2B?style=flat" alt="Beta">
 
-Proven patterns for what you build on Peliqan: one build skill per framework, plus audit and support that know every framework.
+Proven patterns for what you build on Peliqan: one build skill per framework, plus audit and support that know every framework, and a health check for all your connections.
 
 | Skill | Command | What it does | Docs |
 |---|---|---|---|
@@ -53,6 +53,7 @@ Proven patterns for what you build on Peliqan: one build skill per framework, pl
 | [`peliqan-dashboard`](skills/peliqan-dashboard) | `/peliqan:peliqan-dashboard` | **Build** a dashboard: from an existing report in any BI tool, from scratch, or on existing tables. Sets up the data model, verifies every number on real data, then builds and documents it. | [Dashboards](docs/dashboards/README.md) |
 | [`peliqan-audit`](skills/peliqan-audit) | `/peliqan:peliqan-audit` | **Audit** something that looks healthy, before go-live or after a change. Returns a pass/warn/fail scorecard and a ranked fix list. Read-only. | |
 | [`peliqan-support`](skills/peliqan-support) | `/peliqan:peliqan-support` | **Support** when something is broken anywhere in your account: a sync, a pipeline, a data app, an API endpoint, a stale table. Finds the root cause and proposes a fix. Changes nothing without your go-ahead. | |
+| [`peliqan-connection-health`](skills/peliqan-connection-health) | `/peliqan:peliqan-connection-health` | **Health** check of every connection in your account, or in all your sub-accounts: is it running, is its data right. Builds a health dashboard and proposes a fix per cause. Changes nothing without your go-ahead. | |
 | [`peliqan-help`](skills/peliqan-help) | `/peliqan:peliqan-help` | Quick reference for all of the above. | |
 
 One install gives you all of them. The commands above are the plugin form; with a manual install or on claude.ai they are `/peliqan-sync` and so on. You don't have to remember them either: describe what you want ("rebuild this Power BI report", "is our order sync ready to go live?", "the pipeline failed last night") and the AI picks the right skill.
@@ -79,7 +80,8 @@ docs/
 skills/
 ├── peliqan-help/            # quick reference
 ├── peliqan-audit/           # SKILL.md + references/<framework>.md
-├── peliqan-support/         # SKILL.md + references/<framework>.md
+├── peliqan-support/         # SKILL.md + references/<framework>.md, connections.md, health app in assets/
+├── peliqan-connection-health/  # way in for a connection health check; the process lives in support
 ├── peliqan-dashboard/       # build skill for dashboards: data model, formula checks, Streamlit patterns
 └── peliqan-sync/            # build skill for syncs: framework, template, system notes, tests
 ```

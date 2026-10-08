@@ -1,6 +1,6 @@
 ---
 name: peliqan-support
-description: "Triages anything broken in a Peliqan account — a sync worker that stopped or duplicates, a failed pipeline run, a data app that crashed, an API endpoint returning errors, a table that went stale or empty, a dashboard that errors or whose numbers drifted from Power BI — and comes back with an evidence-backed root cause plus a concrete fix. Reads runs, logs, lineage and the sync framework's state tables through the Peliqan MCP. Use whenever someone reports a breakage or asks why something failed: 'the sync is broken', 'orders stopped arriving in the ERP', 'stuck bookmark', 'dead letter rows', 'records are syncing twice', 'the pipeline failed last night', 'why is this table empty', 'the data app is erroring', 'nothing has updated since Tuesday', 'the data is stale', 'the dashboard numbers don't match Power BI', 'the gold table is stale', 'the dashboard is erroring', '/peliqan-support' — including when they only paste an error or a run log. Read-only by default; any rewind, replay, rerun or redeploy needs explicit go-ahead. For building or changing something, use the build skill (peliqan-sync for syncs, peliqan-dashboard for dashboards)."
+description: "Triages anything broken in a Peliqan account — a sync worker that stopped or duplicates, a failed pipeline run, a data app that crashed, an API endpoint returning errors, a table that went stale or empty, a dashboard that errors or whose numbers drifted from Power BI, connections that stopped or load wrong data (one, or a health check of all of them across the account and its sub-accounts) — and comes back with an evidence-backed root cause plus a concrete fix. Reads runs, logs, lineage and the sync framework's state tables through the Peliqan MCP. Use whenever someone reports a breakage or asks why something failed: 'the sync is broken', 'orders stopped arriving in the ERP', 'stuck bookmark', 'dead letter rows', 'records are syncing twice', 'the pipeline failed last night', 'why is this table empty', 'the data app is erroring', 'nothing has updated since Tuesday', 'the data is stale', 'the dashboard numbers don't match Power BI', 'the gold table is stale', 'the dashboard is erroring', 'are all our connections running', 'the balances in our app are wrong', '/peliqan-support' — including when they only paste an error or a run log. Read-only by default; any rewind, replay, rerun or redeploy needs explicit go-ahead. For building or changing something, use the build skill (peliqan-sync for syncs, peliqan-dashboard for dashboards)."
 ---
 
 # Peliqan Support
@@ -13,6 +13,7 @@ object in the account. Domain-specific diagnosis lives in `references/`:
 |---|---|
 | A sync worker (a data app for a system pair, syncs driven from `process_all`) | `references/sync.md` |
 | A dashboard or one of its medallion layers (Bronze/Silver/Gold/`dm_*`) | `references/dashboard.md` |
+| Connections and the data they load, or a health check of all of them (the account or its sub-accounts) | `references/connections.md` |
 | Anything else (pipelines, other data apps, API endpoints, tables) | The steps below |
 
 Paths inside a reference file are relative to that file.
@@ -49,6 +50,13 @@ ambiguous. Orient with `list_sub_accounts`, `list_connections`,
 If the object is a sync worker, continue in `references/sync.md`; if it is a
 dashboard or a medallion layer, in `references/dashboard.md`. Use the steps below only for the account-level
 context around it: is the upstream connection healthy, did the source system change, when did it last work.
+
+If the report is about connections or the data they load (nothing updates, a
+balance is wrong, records are missing) and names no single object, or the
+user asks for help without a specific breakage, offer two ways: **one
+incident** (continue here) or **a connection health check** of the account
+or its sub-accounts (`references/connections.md`, from Step 1). The same check
+is what `peliqan-connection-health` runs.
 
 ## Step 2 — Read the evidence
 

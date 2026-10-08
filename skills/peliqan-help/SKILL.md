@@ -15,6 +15,7 @@ Show the overview below as-is. It needs no tool calls and no account access.
 | **peliqan-dashboard** | `/peliqan-dashboard` | **Build.** Builds a dashboard on your warehouse: rebuilding a report from any BI tool (Power BI, Tableau, Excel…), from scratch, or on existing tables. Sets up the data model it needs and verifies every number before building. | Yes, after you confirm |
 | **peliqan-audit** | `/peliqan-audit` | **Audit.** Checks something that looks healthy (sync workers, dashboards) against the framework rules and its run history. Returns a scorecard and a fix list. | No, read-only |
 | **peliqan-support** | `/peliqan-support` | **Support.** Something is broken anywhere in your account (a sync, pipeline, data app, endpoint, table): finds the root cause from the logs and data and proposes a fix. | Only after your explicit go-ahead |
+| **peliqan-connection-health** | `/peliqan-connection-health` | **Health.** Checks whether every connection in your account, or in all your sub-accounts, is running and its data is right. Builds a health dashboard and proposes a fix per cause. | Only after your go-ahead (fixes, and the health-check app for sub-accounts) |
 | **peliqan-help** | `/peliqan-help` | This card. | No |
 
 Installed as the plugin (the recommended way), the commands carry the plugin name:
@@ -31,7 +32,9 @@ the right one:
 | "Build a sales dashboard on our order tables" | peliqan-dashboard |
 | "Set up bronze/silver/gold for our sales data" | peliqan-dashboard |
 | "Is our order sync ready to go live?" | peliqan-audit |
-| "Run a health check on our syncs" | peliqan-audit |
+| "Run a health check on our sync worker" | peliqan-audit |
+| "Are all our connections running?" | peliqan-connection-health |
+| "Check the connections of all our sub-accounts" | peliqan-connection-health |
 | "Orders stopped arriving in the ERP since Tuesday" | peliqan-support |
 | "Why are there dead-letter rows?" | peliqan-support |
 | "The pipeline failed last night" | peliqan-support |
@@ -44,6 +47,10 @@ the right one:
 2. **Audit** it with `peliqan-audit` before go-live, and again after changes.
 3. **Support** with `peliqan-support` when something breaks. The fix goes
    back through the build skill.
+
+Connections are checked with `peliqan-connection-health`: on request, or on a
+schedule with the health-check app for an account with sub-accounts. It runs
+the same process as a connection health check in `peliqan-support`.
 
 ## Requirements
 
